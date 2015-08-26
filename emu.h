@@ -27,8 +27,8 @@
 
 typedef unsigned int uns;
 
-#define sec       1000000ULL
-#define ptr(X)    ((void*)((uintptr_t)X))
+#define	sec		1000000ULL
+#define	ptr(X)		((void*)((uintptr_t)X))
 
 #define ASSERT(cond, args...) do {					\
 	if (likely(!!(cond)))						\
@@ -41,16 +41,15 @@ typedef unsigned int uns;
 
 #ifdef REALLYFAST
 
-#define	_MASK(N) ((1U << (N)) - 1)
-#define	bits(N, H, L)	\
-    ((N) & _MASK(H+1) & ~_MASK(L))
+#define	_MASK(N)	((1U << (N)) - 1)
+#define	bits(N, H, L)	((N) & _MASK(H+1) & ~_MASK(L))
 
-#define memwriteword(addr, word) do {					\
+#define	memwriteword(addr, word) do {					\
 	memory[addr] = (word) >> 8;					\
 	memory[addr + 1] = (word) & 0xff;				\
 } while (0)
-#define memword(addr) (ntohs(*(uint16_t*)&memory[(addr) & 0xffffff]))
-#define romword(addr) (flash[((addr) & 0x7fffff)])
+#define	memword(addr)	(ntohs(*(uint16_t*)&memory[(addr) & 0xffffff]))
+#define	romword(addr)	(flash[((addr) & 0x7fffff)])
 
 #endif
 
@@ -69,7 +68,7 @@ void		 init(void);
 void		 destroy(void);
 void		 emulate(void);
 void		 emulate1(void);
-#ifndef REALLYFAST
+#ifndef	REALLYFAST
 uint16_t	 membyte(uint32_t addr);
 uint16_t	 memword(uint32_t addr);
 uint16_t	 romword(uint32_t addr_word);
@@ -81,8 +80,11 @@ void		 _unhandled(const char *f, unsigned l, uint16_t instr);
 #define	illins(instr)		_illins(__FILE__, __LINE__, instr)
 void		 _illins(const char *f, unsigned l, uint16_t instr);
 void		 print_regs(void);
-uint64_t	 now(void);	// microseconds
+/* Microseconds: */
+uint64_t	 now(void);
+#ifndef	EMU_CHECK
 void		 getsn(uint16_t addr, uint16_t len);
+#endif
 
 void		 print_ips(void);
 
