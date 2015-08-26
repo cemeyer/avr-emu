@@ -1,6 +1,6 @@
 .*.swp
 *.bin
-msp430-emu
+avr-emu
 check_instr
 *.gcda
 bfhw
