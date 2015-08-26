@@ -1,5 +1,5 @@
 PROG=		avr-emu
-SRCS=		main.c gdbstub.c
+SRCS=		main.c gdbstub.c instr.c
 HDRS=		emu.h
 CHECK_SRCS=	check_instr.c
 

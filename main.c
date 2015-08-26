@@ -1,6 +1,7 @@
 #include <unistd.h>
 
 #include "emu.h"
+#include "instr.h"
 
 struct inprec {
 	uint64_t	 ir_insn;
@@ -28,9 +29,9 @@ FILE		*tracefile;
 
 GHashTable	*input_record;			// insns -> inprec
 
-// Fast random numbers:
-// 18:16 < rmmh> int k = 0x123456; int rand() { k=30903*(k&65535)+(k>>16);
-//               return(k&65535); }
+static struct instr_decode avr_instr[] = {
+	{ 0x0000, 0xffff, instr_nop },
+};
 
 void
 print_ips(void)
@@ -163,6 +164,7 @@ void
 emulate1(void)
 {
 	uint16_t instr;
+	size_t i;
 
 	pc_start = pc;
 	instr_size = 1;
@@ -170,22 +172,27 @@ emulate1(void)
 	instr = romword(pc);
 	(void)instr;
 
-	// XXX iterate instr table
-	// if (match)
+	for (i = 0; i < ARRAYLEN(avr_instr); i++)
+		if ((instr & avr_instr[i].mask) == avr_instr[i].pattern)
+			break;
+
+	if (i == ARRAYLEN(avr_instr))
+		illins(instr);
+
 	//   if (match->dddd)
 	//     dddd = XXX
 	//   if (match->RRRR)
 	//     RRRR = XXX
 	//
 	//   match->code ...
-
+	avr_instr[i].code();
 	pc += instr_size;
 
 	if (!replay_mode && tracefile) {
 		ASSERT(instr_size > 0 && instr_size < 3, "instr_size: %u",
 		    (uns)instr_size);
 
-		for (unsigned i = 0; i < instr_size; i++) {
+		for (i = 0; i < instr_size; i++) {
 			uint16_t word;
 
 			word = romword(pc_start + i);
