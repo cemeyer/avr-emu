@@ -27,7 +27,7 @@ checkrun: check_instr
 	./check_instr
 
 check_instr: $(CHECK_SRCS) $(SRCS) $(HDRS)
-	cc $(FLAGS) -O0 -DEMU_CHECK $(CHECK_SRCS) $(SRCS) -o $@ -lcheck $(LDLIBS)
+	cc $(FLAGS) -DEMU_CHECK $(CHECK_SRCS) $(SRCS) -o $@ -lcheck $(LDLIBS)
 
 clean:
 	rm -f check_instr avr-emu

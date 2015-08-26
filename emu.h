@@ -27,22 +27,17 @@
 	(void) (&_min1 == &_min2);		\
 	_min1 < _min2 ? _min1 : _min2; })
 
-extern uint16_t		 pc_start;
-extern uint8_t		 pageprot[0x100];
-extern uint16_t		 registers[16];
-extern uint8_t		 memory[0x10000];
+/* XXX */
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#define	registers	( (uint16_t*) memory )
+extern uint32_t		 pc_start;
+extern uint8_t		 memory[0x1000000];
 extern bool		 off;
-extern bool		 unlocked;
-extern bool		 dep_enabled;
 extern bool		 replay_mode;
 extern bool		 stepone;
 extern uint64_t		 insns;
 extern uint64_t		 insnreplaylim;
 extern uint64_t		 insnlimit;
-
-#define DEP_R 0x4
-#define DEP_W 0x2
-#define DEP_X 0x1
 
 #define PC 0
 #define SP 1
@@ -146,7 +141,6 @@ void		 addflags(unsigned res, uint16_t orig, uint16_t *set,
 void		 andflags(uint16_t res, uint16_t *set, uint16_t *clr);
 uint64_t	 now(void);	// microseconds
 void		 getsn(uint16_t addr, uint16_t len);
-void		 depcheck(uint16_t addr, unsigned perm);
 
 void	handle_jump(uint16_t instr);
 void	handle_single(uint16_t instr);

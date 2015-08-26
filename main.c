@@ -8,18 +8,14 @@ struct inprec {
 	char		 ir_inp[0];
 };
 
-uint16_t	 pc_start,
+uint32_t	 pc_start,
 		 instr_size;
-uint8_t		 pageprot[0x100];
-uint16_t	 registers[16];
-uint8_t		 memory[0x10000];
-uint64_t	 start;
+uint8_t		 memory[0x1000000];
+uint64_t	 start;		/* Start time in us */
 uint64_t	 insns;
 uint64_t	 insnlimit;
 uint64_t	 insnreplaylim;
 bool		 off;
-bool		 unlocked;
-bool		 dep_enabled;
 bool		 replay_mode;
 bool		 ctrlc;
 
@@ -27,8 +23,6 @@ bool		 tracehex;
 FILE		*tracefile;
 
 GHashTable	*input_record;			// insns -> inprec
-
-static bool	 diverged;
 
 // Fast random numbers:
 // 18:16 < rmmh> int k = 0x123456; int rand() { k=30903*(k&65535)+(k>>16);
@@ -51,12 +45,9 @@ init(void)
 {
 
 	insns = 0;
-	off = unlocked = false;
+	off = false;
 	start = now();
 	//memset(memory, 0, sizeof(memory));
-	memset(registers, 0, sizeof registers);
-	memset(pageprot, DEP_R|DEP_W|DEP_X, sizeof pageprot);
-	dep_enabled = false;
 }
 
 void
@@ -76,7 +67,7 @@ ctrlc_handler(int s)
 void
 usage(void)
 {
-	printf("usage: msp430-emu FLAGS [binaryimage]\n"
+	printf("usage: avr-emu FLAGS [binaryimage]\n"
 		"\n"
 		"  FLAGS:\n"
 		"    -g            Debug with GDB\n"
@@ -140,7 +131,6 @@ main(int argc, char **argv)
 		idx += rd;
 	}
 	printf("Loaded %zu words from image.\n", idx/2);
-	memwriteword(0x10, 0x4130); // callgate
 
 	fclose(romfile);
 
@@ -184,7 +174,6 @@ emulate1(void)
 	ASSERT((registers[PC] & 0x1) == 0, "insn addr unaligned");
 #endif
 
-	depcheck(registers[PC], DEP_X);
 	instr = memword(registers[PC]);
 
 	// dec r15; jnz -2 busy loop
@@ -280,14 +269,6 @@ emulate(void)
 			continue;
 		}
 #endif
-
-		if (registers[PC] == 0x0010) {
-			// Callgate
-			if (registers[SR] & 0x8000) {
-				unsigned op = (registers[SR] >> 8) & 0x7f;
-				callgate(op);
-			}
-		}
 
 		if (off)
 			break;
@@ -545,7 +526,6 @@ handle_single(uint16_t instr)
 		if (dstval != CG)
 			registers[dstval] = res & 0xffff;
 	} else if (dstkind == OP_MEM) {
-		depcheck(dstval, DEP_W);
 		if (bw)
 			memory[dstval] = (res & 0xff);
 		else
@@ -746,7 +726,6 @@ handle_double(uint16_t instr)
 			res &= 0x00ff;
 		registers[dstval] = res & 0xffff;
 	} else if (dstkind == OP_MEM) {
-		depcheck(dstval, DEP_W);
 		if (bw)
 			memory[dstval] = (res & 0xff);
 		else
@@ -1109,84 +1088,6 @@ now(void)
 	return ((uint64_t)sec * ts.tv_sec + (ts.tv_nsec / 1000));
 }
 
-void
-callgate(unsigned op)
-{
-	uint16_t argaddr = registers[SP] + 8,
-		 getsaddr;
-	unsigned bufsz;
-
-	switch (op) {
-	case 0x0:
-#ifndef QUIET
-		if (!replay_mode)
-			putchar((char)membyte(argaddr));
-#endif
-		break;
-	case 0x2:
-		getsaddr = memword(argaddr);
-		bufsz = (uns)memword(argaddr+2);
-		getsn(getsaddr, bufsz);
-		break;
-	case 0x10:
-		// Turn on DEP
-		if (dep_enabled)
-			break;
-		for (unsigned i = 0; i < sizeof(pageprot); i++) {
-			if ((pageprot[i] & DEP_W) && (pageprot[i] & DEP_X)) {
-				printf("Enable DEP invalid: page %u +WX!\n",
-				    i);
-				abort_nodump();
-			}
-		}
-		dep_enabled = true;
-		break;
-	case 0x11:
-		// Set page protection
-		{
-		uint16_t page, wr;
-		page = memword(argaddr);
-		wr = memword(argaddr+2);
-
-		ASSERT(page < 0x100, "page");
-		ASSERT(wr == 0 || wr == 1, "w/x");
-
-		pageprot[page] &= ~( wr? DEP_X : DEP_W );
-		}
-		break;
-	case 0x20:
-		// RNG
-		registers[15] = 0;
-		break;
-	case 0x7d:
-		// writes a non-zero byte to supplied pointer if password is
-		// correct (arg[0]). password is never correct.
-		memory[memword(argaddr+2)] = 0;
-		break;
-	case 0x7e:
-		// triggers unlock if password is correct; nop
-		break;
-	case 0x7f:
-		// unlock.
-		win();
-		break;
-	default:
-		unhandled(0x4130);
-		break;
-	}
-}
-
-void
-win(void)
-{
-
-	printf("The lock opens; you win!\n\n");
-	print_regs();
-	print_ips();
-	off = true;
-	unlocked = true;
-}
-
 #ifndef EMU_CHECK
 static void
 ins_inprec(char *dat, size_t sz)
@@ -1268,18 +1169,3 @@ out:
 	free(buf);
 }
 #endif
-
-void
-depcheck(uint16_t addr, unsigned perm)
-{
-
-	if (!dep_enabled)
-		return;
-
-	if (pageprot[addr >> 8] & perm)
-		return;
-
-	printf("DEP: Page 0x%02x is not %s!\n", (uns)addr >> 8,
-	    (perm == DEP_W)? "writable" : "executable");
-	abort_nodump();
-}
