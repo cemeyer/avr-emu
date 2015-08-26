@@ -27,44 +27,10 @@
 	(void) (&_min1 == &_min2);		\
 	_min1 < _min2 ? _min1 : _min2; })
 
-#if SYMBOLIC
-enum sexp_kind {
-	S_OR,
-	S_XOR,
-	S_AND,
-	S_PLUS,
-	S_IMMEDIATE,	// s_nargs -> value
-	S_SR,
-	S_EQ,
-	S_SR_AND,
-	S_SR_RRC,
-	S_SR_RRA,
-	S_RSHIFT,
-	S_LSHIFT,
-	S_RRA,
-	S_INP,		// s_nargs -> index
-	S_MATCH_ANY,
-	S_SXT,
-
-	S_SUBSEXP_MATCH,
-};
-
-#define SUBSEXP_MATCH_EXP 0xbeef
-#define SUBSEXP_MATCH_IMM 0xcafe
-#define SEXP_MAXARGS 4
-struct sexp {
-	enum sexp_kind	 s_kind;
-	unsigned	 s_nargs;
-	struct sexp	*s_arg[SEXP_MAXARGS];
-};
-#endif
-
 extern uint16_t		 pc_start;
 extern uint8_t		 pageprot[0x100];
 extern uint16_t		 registers[16];
 extern uint8_t		 memory[0x10000];
-extern struct sexp	*register_symbols[16];
-extern GHashTable	*memory_symbols;		// addr -> struct sexp*
 extern bool		 off;
 extern bool		 unlocked;
 extern bool		 dep_enabled;
@@ -116,7 +82,6 @@ enum operand_kind {
 	OP_MEM,		// immediate (inline), other mem indirects
 	OP_CONST,	// cg-/sr-based specials
 	OP_FLAGSONLY,	// cmp
-	OP_SYMBOLIC,
 };
 
 typedef unsigned int uns;
@@ -139,35 +104,6 @@ typedef unsigned int uns;
 #define memwriteword(addr, word) (memword(addr) = (word))
 #define memword(addr) (*(uint16_t*)&memory[(addr) & 0xffff])
 
-#endif
-
-#if SYMBOLIC
-#define STATIC_PATTERN(n, s) \
-static struct sexp *n;					\
-static void __attribute__ ((constructor))	\
-_init_pattern_ ## n (void)			\
-{						\
-						\
-	n = (s);				\
-}
-
-struct sexp	*peephole(struct sexp *s);
-bool		 isregsym(uint16_t reg);
-bool		 ismemsym(uint16_t addr, uint16_t bw);
-struct sexp	*regsym(uint16_t reg);
-struct sexp	*memsym(uint16_t addr, uint16_t bw);
-void		 printsym(struct sexp *sym);
-void		 memwritesym(uint16_t addr, uint16_t bw, struct sexp *s);
-void		 delmemsyms(uint16_t addr, uint16_t bw);
-struct sexp	*mksexp(enum sexp_kind sk, unsigned nargs, ...);
-struct sexp	*sexp_alloc(enum sexp_kind skind);
-struct sexp	*sexp_imm_alloc(uint16_t n);
-bool		 sexp_eq(struct sexp *s, struct sexp *t);
-void		 sexp_flags(struct sexp *flags, uint16_t *set, uint16_t *clr);
-struct sexp	*mkinp(unsigned i);
-struct sexp	*subsexp(struct sexp **out);
-struct sexp	*subimm(uint16_t *out);
-bool		 sexpmatch(struct sexp *needle, struct sexp *haystack);
 #endif
 
 void		 abort_nodump(void);
