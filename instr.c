@@ -35,6 +35,16 @@ instr_mov(struct instr_decode_common *idc)
 }
 
 void
+instr_movw(struct instr_decode_common *idc)
+{
+	uint8_t RRRR, DDDD;
+
+	DDDD = (idc->ddddd - 16) << 1;
+	RRRR = (idc->rrrrr - 16) << 1;
+	memwriteword(DDDD, memword(RRRR));
+}
+
+void
 instr_nop(struct instr_decode_common *idc __unused)
 {
 }

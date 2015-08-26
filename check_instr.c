@@ -175,6 +175,25 @@ START_TEST(test_in)
 }
 END_TEST
 
+START_TEST(test_movw)
+{
+	uint16_t code[] = {
+		0x0100 | /*dddd*/ 0xe0 | /*rrrr*/ 0xf,	/* mov r29:28, r31:r30 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	/* The word pairs are little endian?! 0xabcd: */
+	memory[31] = 0xab;
+	memory[30] = 0xcd;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[29], memory[31]);
+	ck_assert_uint_eq(memory[28], memory[30]);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -195,6 +214,11 @@ suite_instr(void)
 	tcase_add_test(t, test_or);
 	tcase_add_test(t, test_ori);
 	tcase_add_test(t, test_out);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("regpairs");
+	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_movw);
 	suite_add_tcase(s, t);
 
 	return s;

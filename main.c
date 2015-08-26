@@ -33,6 +33,7 @@ GHashTable	*input_record;			// insns -> inprec
 static struct instr_decode avr_instr[] = {
 	{ 0xb000, 0xf800, instr_in, .ddddd84 = true },
 	{ 0x2c00, 0xfc00, instr_mov, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x0100, 0xff00, instr_movw, .dddd74 = true, .rrrr30 = true },
 	{ 0x0000, 0xffff, instr_nop },
 	{ 0x2800, 0xfc00, instr_or, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x6000, 0xf000, instr_ori, .dddd74 = true, .KKKK118_30 = true },
@@ -195,6 +196,8 @@ emulate1(void)
 
 	if (avr_instr[i].rrrrr9_30)
 		idc.rrrrr = (bits(instr, 9, 9) >> 5) | bits(instr, 3, 0);
+	if (avr_instr[i].rrrr30)
+		idc.rrrrr = 16 + bits(instr, 3, 0);
 
 	if (avr_instr[i].KKKK118_30)
 		idc.imm_u8 = (bits(instr, 11, 8) >> 4) | bits(instr, 3, 0);
