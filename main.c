@@ -31,6 +31,7 @@ GHashTable	*input_record;			// insns -> inprec
 
 static struct instr_decode avr_instr[] = {
 	{ 0x0000, 0xffff, instr_nop },
+	{ 0x2c00, 0xfc00, instr_mov, .ddddd84 = true, .rrrrr9_30 = true },
 };
 
 void
@@ -163,6 +164,7 @@ main(int argc, char **argv)
 void
 emulate1(void)
 {
+	struct instr_decode_common idc;
 	uint16_t instr;
 	size_t i;
 
@@ -170,7 +172,6 @@ emulate1(void)
 	instr_size = 1;
 
 	instr = romword(pc);
-	(void)instr;
 
 	for (i = 0; i < ARRAYLEN(avr_instr); i++)
 		if ((instr & avr_instr[i].mask) == avr_instr[i].pattern)
@@ -179,13 +180,13 @@ emulate1(void)
 	if (i == ARRAYLEN(avr_instr))
 		illins(instr);
 
-	//   if (match->dddd)
-	//     dddd = XXX
-	//   if (match->RRRR)
-	//     RRRR = XXX
-	//
-	//   match->code ...
-	avr_instr[i].code();
+	memset(&idc, 0, sizeof(idc));
+	if (avr_instr[i].ddddd84)
+		idc.ddddd = bits(instr, 8, 4) >> 4;
+	if (avr_instr[i].rrrrr9_30)
+		idc.rrrrr = (bits(instr, 9, 9) >> 5) | bits(instr, 3, 0);
+
+	avr_instr[i].code(&idc);
 	pc += instr_size;
 
 	if (!replay_mode && tracefile) {

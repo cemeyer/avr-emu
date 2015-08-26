@@ -45,6 +45,34 @@ START_TEST(test_nop)
 }
 END_TEST
 
+START_TEST(test_mov)
+{
+	uint16_t code[] = {
+		0x2c00 | /*r_rrrr*/ 0x20f | /*ddddd*/ 0x1e0,	/* mov r30,r31 */
+		0x2c00 | /*r_rrrr*/ 0x20e | /*ddddd*/ 0x050,	/* mov r5,r30 */
+		0x2c00 | /*r_rrrr*/ 0x005 | /*ddddd*/ 0x000,	/* mov r0,r5 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	memory[31] = 0xab;
+	ck_assert_uint_eq(memory[30], 0);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[30], 0xab);
+	ck_assert_uint_eq(memory[5], 0);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[5], 0xab);
+	ck_assert_uint_eq(memory[0], 0);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[0], 0xab);
+}
+END_TEST
+
 #if 0
 static void
 _ck_assert_flags(unsigned line, uint16_t exp)
@@ -1371,6 +1399,11 @@ suite_instr(void)
 	t = tcase_create("nop");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_nop);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("mov");
+	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_mov);
 	suite_add_tcase(s, t);
 
 #if 0

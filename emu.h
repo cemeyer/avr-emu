@@ -16,6 +16,9 @@
 
 #define	likely(cond)	__builtin_expect ((cond), 1)
 #define	unlikely(cond)	__builtin_expect ((cond), 0)
+#ifndef	__unused
+#define	__unused	__attribute__((unused))
+#endif
 
 #define	ARRAYLEN(arr)	((sizeof(arr)) / sizeof((arr)[0]))
 
