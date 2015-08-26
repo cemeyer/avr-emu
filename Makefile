@@ -11,23 +11,27 @@ GLIB_FLAGS=	`pkg-config --cflags glib-2.0`
 GLIB_LDFLAGS=	`pkg-config --libs glib-2.0`
 
 # Platform
-CC_VER=		$(cc --version)
+CC=		cc
+CC_VER=		$(shell $(CC) --version)
 ifneq (,$(findstring GCC,$(CC_VER)))
     # Perhaps a check for a recent version belongs here.
     NEWGCCFLAGS=	-grecord-gcc-switches -fstack-protector-strong --param=ssp-buffer-size=4
+endif
+ifneq (,$(findstring clang,$(CC_VER)))
+    WARNFLAGS+=		-Wno-unknown-attributes
 endif
 
 FLAGS=		$(WARNFLAGS) $(OTHERFLAGS) $(OPTFLAGS) $(GLIB_FLAGS) $(NEWGCCFLAGS) $(CFLAGS)
 LDLIBS=		$(GLIB_LDFLAGS)
 
 $(PROG): $(SRCS) $(HDRS)
-	cc $(FLAGS) $(SRCS) -o $@ $(LDLIBS)
+	$(CC) $(FLAGS) $(SRCS) -o $@ $(LDLIBS)
 
 checkrun: check_instr
 	./check_instr
 
 check_instr: $(CHECK_SRCS) $(SRCS) $(HDRS)
-	cc $(FLAGS) -DEMU_CHECK $(CHECK_SRCS) $(SRCS) -o $@ -lcheck $(LDLIBS)
+	$(CC) $(FLAGS) -DEMU_CHECK $(CHECK_SRCS) $(SRCS) -o $@ -lcheck $(LDLIBS)
 
 clean:
 	rm -f check_instr avr-emu
