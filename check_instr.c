@@ -143,6 +143,38 @@ START_TEST(test_ori)
 }
 END_TEST
 
+START_TEST(test_out)
+{
+	uint16_t code[] = {
+		0xb800 | /*AA_AAAA*/ 0x60e | /*rrrrr*/ 0x1f0,	/* out $3e, r31 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0xab;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[IO_BASE + 0x3e], 0xab);
+}
+END_TEST
+
+START_TEST(test_in)
+{
+	uint16_t code[] = {
+		0xb000 | /*AA_AAAA*/ 0x60e | /*rrrrr*/ 0x1f0,	/* in r31, $3e */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[IO_BASE + 0x3e] = 0xab;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[31], 0xab);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -158,9 +190,11 @@ suite_instr(void)
 
 	t = tcase_create("basic");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_in);
 	tcase_add_test(t, test_mov);
 	tcase_add_test(t, test_or);
 	tcase_add_test(t, test_ori);
+	tcase_add_test(t, test_out);
 	suite_add_tcase(s, t);
 
 	return s;

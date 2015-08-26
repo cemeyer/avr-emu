@@ -2,11 +2,10 @@
 #define	__INSTR_H__
 
 struct instr_decode_common {
+	uint16_t	instr;
 	uint8_t		ddddd;
 	uint8_t		rrrrr;
 	uint8_t		imm_u8;
-
-
 
 	uint8_t		setflags;
 	uint8_t		clrflags;
@@ -24,9 +23,11 @@ struct instr_decode {
 	bool		  KKKK118_30 : 1;
 };
 
+void instr_in(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);
 void instr_nop(struct instr_decode_common *);
 void instr_or(struct instr_decode_common *);
 void instr_ori(struct instr_decode_common *);
+void instr_out(struct instr_decode_common *);
 
 #endif

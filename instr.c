@@ -19,6 +19,15 @@ logic_flags8(uint8_t result, uint8_t *setflags, uint8_t *clrflags)
 }
 
 void
+instr_in(struct instr_decode_common *idc)
+{
+	uint8_t io_port;
+
+	io_port = (bits(idc->instr, 10, 9) >> 5) | bits(idc->instr, 3, 0);
+	memory[idc->ddddd] = memory[IO_BASE + io_port];
+}
+
+void
 instr_mov(struct instr_decode_common *idc)
 {
 
@@ -44,4 +53,13 @@ instr_ori(struct instr_decode_common *idc)
 
 	memory[idc->ddddd] |= idc->imm_u8;
 	logic_flags8(memory[idc->ddddd], &idc->setflags, &idc->clrflags);
+}
+
+void
+instr_out(struct instr_decode_common *idc)
+{
+	uint8_t io_port;
+
+	io_port = (bits(idc->instr, 10, 9) >> 5) | bits(idc->instr, 3, 0);
+	memory[IO_BASE + io_port] = memory[idc->ddddd];
 }
