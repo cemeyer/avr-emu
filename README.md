@@ -1,29 +1,19 @@
-msp430-emu-uctf [![Build Status](https://travis-ci.org/cemeyer/msp430-emu-uctf.png?branch=master)](https://travis-ci.org/cemeyer/msp430-emu-uctf)
+avr-emu [![Build Status](https://travis-ci.org/cemeyer/avr-emu.png?branch=master)](https://travis-ci.org/cemeyer/avr-emu)
 ===================
 
-This is an msp430-alike emulator for Matasano/Square's #µctf (Microcorruption).
+This is an AVR emulator. It is a work in progress, and is not expected to be
+very good.
 
-What can I do with it?
-======================
+Alternatives
+============
 
-* Use it to debug or solve Microcorruption puzzles offline
-* Use it to debug or emulate other trivial MSP430 embedded programs (with the
-  same weird register and callgate behavior of Microcorruption...)
-* Embed it into something weirder and cooler! I don't even know.
-
-Why not mspsim, mspdebug?
-=========================
-
-msp430-emu-uctf (that's a mouthful, isn't it) faithfully emulates the
-inaccurate flags and instruction decode behavior of the
-[Microcorruption](http://microcorruption.com/) web emulator and debugger. This
-is useful on many #µctf levels. It also has enough of the callgate (0x0010)
-implemented to successfully debug and defeat all of the puzzles.
-
-Without making any comparison to the speed of mspsim or mspdebug,
-msp430-emu-uctf is decently fast (emulates about 48 Million msp430 instructions
-per second on my Intel E3-1240v3), and is probably faster than any hardware
-MSP430 ever built (typically they are 25 MHz, with 2-3 cycles per instruction).
+Several AVR emulators exist. The ones I discovered are IMAVR, GNU AVR,
+SimulAVR, and simavr. IMAVR has unclear licensing and poor code quality. GNU
+AVR is fairly old GUI simulator. It's not clear it would work well for my
+purposes. simavr is a much newer project, started in 2009-2010; unfortunately
+it is GPLv3 and seems to have constant bugs (evidenced by the Github issues
+list). Simulavr is an older project, but has also seen recent work (as recently
+as 2014). It is GPLv2+.
 
 Building
 ========
@@ -33,60 +23,37 @@ You will need `glib` and its development files (specifically, package config
 glib2 glib2-devel`. On Ubuntu, use `apt-get install libglib2.0-0
 libglib2.0-dev`.
 
-On systems with older GCC (Ubuntu), use `make NEWGCCFLAGS= EXTRAFLAGS=-lrt`.
-
-On newer systems, `make` will build the emulator, `msp430-emu`.
+`make` will build the emulator, `avr-emu`.
 
 This is not packaged for installation at this time. Patches welcome.
 
 Simple Emulation
 ================
 
-Invoke `msp430-emu <romfile>`.
+Invoke `avr-emu <romfile>`.
 
 Tracing
 =======
 
-Use the `-t=TRACE_FILE` option to `msp430-emu` to log a binary trace of all
+Use the `-t=TRACE_FILE` option to `avr-emu` to log a binary trace of all
 instructions executed to `TRACE_FILE`. Use the `-x` flag to dump in hex format
 instead of binary.
 
-GDB: Installing msp430-gdb
+GDB: Installing avr-gdb
 ==========================
 
-msp430-gdb is `gdb` with a set of patches applied from the `mspgcc` project.
+avr-gdb is `gdb` targetted at remote debugging AVR binaries.
 
-Ubuntu or Debian:
------------------
-
-`apt-get install gdb-msp430`
-
-Arch:
------
-
-Install `gdb-msp430` via pacman.
-
-Gentoo:
--------
-
-Install `dev-embedded/msp430-gdb`.
-
-Fedora and others:
-------------------
-
-If you don't have it as a distro package, you can download the gdb-7.2a sources
-from a GNU mirror, apply the mspgcc-2012xxx-gdb patches against those sources,
-and configure with something like `--program-prefix=msp430- --prefix=$HOME/.local`
-for a `msp430-gdb` tool installed in your `$HOME` directory.
+On Fedora Linux, simply install `avr-gdb`.
 
 GDB: Debugging Emulated ROMs
 ============================
 
-Invoke `msp430-emu -g <romfile>` to wait for GDB on startup. The emulator binds
-TCP port 3713 and waits for the first client to connect. Use `msp430-gdb` from
-another terminal to connect (mspgcc patchset on top of gdb-7.2a) with:
+Invoke `avr-emu -g <romfile>` to wait for GDB on startup. The emulator binds
+TCP port 3713 and waits for the first client to connect. Use `avr-gdb` from
+another terminal to connect with:
 
-    msp430-gdb -ex 'target remote localhost:3713'
+    avr-gdb -ex 'target remote localhost:3713'
 
 Supported commands are:
 * reading/writing registers
@@ -101,62 +68,15 @@ TODO:
 GDB: Reverse debugging
 ======================
 
-In gdb, you can use `reverse-stepi` (or `rsi` for short) to step backwards. For
-example (from Hanoi):
+In gdb, you can use `reverse-stepi` (or `rsi` for short) to step backwards.
 
-    $ msp430-gdb -nx -ex 'target remote localhost:3713'
-
-    (gdb) x/i $pc
-    => 0x4400: mov #17408, r1 ;#0x4400
-
-The next instruction will put 0x4400 in `r1` (`SP`).
-
-    (gdb) p $r1
-    $1 = (void *) 0x0
-
-Do it...
-
-    (gdb) si
-    0x00004404 in ?? ()
-
-    (gdb) p $r1
-    $2 = (void *) 0x4400
-
-Ok, it is set to 0x4400 now.
-
-    (gdb) rsi
-    0x00004400 in ?? ()
-
-Go back one instruction.
-
-    (gdb) p $r1
-    $3 = (void *) 0x0
-
-It's no longer set!
-
-Symbolic Emulation
-==================
-
-`make msp430-sym` will build the symbolic emulator.
-
-Caveat: symbolic execution is much, much slower than direct emulation.
-
-To run a level in symbolic mode, invoke the emulator like so:
-
-    msp430-sym <romfile> <input length>
-
-This mode is less tested. On some levels you will see that register or PC loads
-are dependent on symbolic inputs -- that means your input controls register
-contents or code flow (exploitable!).
-
-On Hollywood, with the right input size, this will emit gibberish. But that
-gibberish is not too far from the truth. I recommend using the tracing mode to
-defeat Hollywood, rather than trying to parse the symbolic output.
+See https://github.com/cemeyer/msp430-emu-uctf#gdb-reverse-debugging for a
+short example of the mechanism.
 
 License
 =======
 
-msp430-emu-uctf is released under the terms of the MIT license. See LICENSE.
+cemeyer/avr-emu is released under the terms of the MIT license. See LICENSE.
 Basically, do what you will with it.
 
 Hacking
@@ -169,6 +89,5 @@ Style: The C sources attempt to follow BSD's
 [style(9)](http://www.freebsd.org/cgi/man.cgi?query=style&sektion=9). Style fix
 patches are welcome.
 
-Most of the emulator (including symbolic mode) lives in `main.c`. Most of the
-GDB remote stub lives in `gdbstub.c`. There are instruction emulation and
-symbolic mode optimization unit tests in `check_instr.c`.
+Most of the emulator lives in `main.c`. Most of the GDB remote stub lives in
+`gdbstub.c`. There are instruction emulation unit tests in `check_instr.c`.
