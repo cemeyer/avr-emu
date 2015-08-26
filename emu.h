@@ -53,6 +53,7 @@ typedef unsigned int uns;
 
 #endif
 
+extern uint32_t		 pc;
 extern uint32_t		 pc_start;
 extern uint8_t		 memory[0x1000000];
 extern uint16_t		 flash[ 0x1000000 / sizeof(uint16_t)];

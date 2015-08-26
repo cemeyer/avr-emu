@@ -165,9 +165,7 @@ emulate1(void)
 	uint16_t instr;
 
 	pc_start = pc;
-	instr_size = 2;
-
-	ASSERT((pc & 0x1) == 0, "insn addr unaligned");
+	instr_size = 1;
 
 	instr = romword(pc);
 	(void)instr;
@@ -181,23 +179,24 @@ emulate1(void)
 	//
 	//   match->code ...
 
-	if (!replay_mode && tracefile) {
-		ASSERT((instr_size / 2) > 0 && (instr_size / 2) < 4,
-		    "instr_size: %d", instr_size);
+	pc += instr_size;
 
-		for (unsigned i = 0; i < instr_size; i += 2) {
+	if (!replay_mode && tracefile) {
+		ASSERT(instr_size > 0 && instr_size < 3, "instr_size: %u",
+		    (uns)instr_size);
+
+		for (unsigned i = 0; i < instr_size; i++) {
+			uint16_t word;
+
+			word = romword(pc_start + i);
 			if (tracehex)
-				fprintf(tracefile, "%04x ",
-				    (uns)romword(pc_start + (i/2)));
+				fprintf(tracefile, "%04x ", (uns)word);
 			else {
 				size_t wr;
-				uint16_t word;
-				word = romword(pc_start + (i/2));
 				wr = fwrite(&word, 2, 1, tracefile);
 				ASSERT(wr == 1, "fwrite: %s", strerror(errno));
 			}
 		}
-
 		if (tracehex)
 			fprintf(tracefile, "\n");
 	}

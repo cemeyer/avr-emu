@@ -2,55 +2,25 @@
 
 #include <check.h>
 
-#define CODE_STEP   (0x4500)
-#define CODE_REPEAT (0x4400)
-#define PC_LOAD     (0xfffe)
-#define CALL_GATE   (0x0010)
+#define	PC_START		0
+#define	ck_assert_flags(flags)	_ck_assert_flags(__LINE__, flags)
 
-#define ck_assert_flags(flags) _ck_assert_flags(__LINE__, flags)
-
-// Unused for check, I just conflated the EMU_CHECK define for other things
-// (bfhw).
-void
-getsn(uint16_t addr, uint16_t sz)
-{
-
-	(void)addr;
-	(void)sz;
-}
+/* Make it harder to forget to add tests to suite. */
+#pragma GCC diagnostic error "-Wunused-function"
 
 void
-install_words_le(uint16_t *code, uint16_t addr, size_t sz)
+install_words(uint16_t *code, uint32_t addr, size_t sz)
 {
 
-	for (; sz > 1; sz -= 2) {
-		uint16_t word = *code;
-
-		memory[addr] = word & 0xff;
-		memory[addr+1] = (word>>8) & 0xff;
-
-		code++;
-		addr += 2;
-	}
+	memcpy(&flash[addr], code, sz);
 }
 
 void
 setup_machine(void)
 {
-	uint16_t ret = 0x4130,
-		 run = CODE_REPEAT;
 
 	// zero regs/mem, clear symbols
 	init();
-
-	// Setup callgate (ret)
-	install_words_le(&ret, CALL_GATE, sizeof(ret));
-
-	// Setup initial PC value @4400 (full emulation)
-	install_words_le(&run, PC_LOAD, sizeof(run));
-
-	// Setup intitial PC for single-step emu
-	registers[PC] = CODE_STEP;
 }
 
 void
@@ -60,6 +30,22 @@ teardown_machine(void)
 	destroy();
 }
 
+START_TEST(test_nop)
+{
+	uint16_t code[] = {
+		0x0000,
+		0x0000,
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+}
+END_TEST
+
+#if 0
 static void
 _ck_assert_flags(unsigned line, uint16_t exp)
 {
@@ -1372,12 +1358,22 @@ START_TEST(test_bit)
 	ck_assert_flags(SR_C);
 }
 END_TEST
+#endif
 
 Suite *
 suite_instr(void)
 {
-	Suite *s = suite_create("instr");
+	Suite *s;
+	TCase *t;
 
+	s = suite_create("instr");
+
+	t = tcase_create("nop");
+	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_nop);
+	suite_add_tcase(s, t);
+
+#if 0
 	TCase *tmov = tcase_create("mov");
 	tcase_add_checked_fixture(tmov, setup_machine, teardown_machine);
 	tcase_add_test(tmov, test_mov_const_reg);
@@ -1502,6 +1498,7 @@ suite_instr(void)
 	tcase_add_checked_fixture(tbit, setup_machine, teardown_machine);
 	tcase_add_test(tbit, test_bit);
 	suite_add_tcase(s, tbit);
+#endif
 
 	return s;
 }
