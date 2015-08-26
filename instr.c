@@ -37,3 +37,11 @@ instr_or(struct instr_decode_common *idc)
 	memory[idc->ddddd] |= memory[idc->rrrrr];
 	logic_flags8(memory[idc->ddddd], &idc->setflags, &idc->clrflags);
 }
+
+void
+instr_ori(struct instr_decode_common *idc)
+{
+
+	memory[idc->ddddd] |= idc->imm_u8;
+	logic_flags8(memory[idc->ddddd], &idc->setflags, &idc->clrflags);
+}

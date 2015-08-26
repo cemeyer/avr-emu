@@ -29,10 +29,12 @@ FILE		*tracefile;
 
 GHashTable	*input_record;			// insns -> inprec
 
+// Could easily sort by popularity over time.
 static struct instr_decode avr_instr[] = {
 	{ 0x2c00, 0xfc00, instr_mov, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x0000, 0xffff, instr_nop },
 	{ 0x2800, 0xfc00, instr_or, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x6000, 0xf000, instr_ori, .dddd74 = true, .KKKK118_30 = true },
 };
 
 void
@@ -182,12 +184,20 @@ emulate1(void)
 		illins(instr);
 
 	memset(&idc, 0, sizeof(idc));
+
 	if (avr_instr[i].ddddd84)
 		idc.ddddd = bits(instr, 8, 4) >> 4;
+	if (avr_instr[i].dddd74)
+		idc.ddddd = 16 + (bits(instr, 7, 4) >> 4);
+
 	if (avr_instr[i].rrrrr9_30)
 		idc.rrrrr = (bits(instr, 9, 9) >> 5) | bits(instr, 3, 0);
 
+	if (avr_instr[i].KKKK118_30)
+		idc.imm_u8 = (bits(instr, 11, 8) >> 4) | bits(instr, 3, 0);
+
 	avr_instr[i].code(&idc);
+
 	memory[SREG] &= ~idc.clrflags;
 	memory[SREG] |= idc.setflags;
 
