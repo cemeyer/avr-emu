@@ -4,19 +4,25 @@
 struct instr_decode_common {
 	uint8_t		ddddd;
 	uint8_t		rrrrr;
+
+
+
+	uint8_t		setflags;
+	uint8_t		clrflags;
 };
 
 struct instr_decode {
 	uint16_t	  pattern;
 	uint16_t	  mask;
 
-	void		(*code)(const struct instr_decode_common *);
+	void		(*code)(struct instr_decode_common *);
 
 	bool		  ddddd84 : 1;
 	bool		  rrrrr9_30 : 1;
 };
 
-void instr_nop(const struct instr_decode_common *);
-void instr_mov(const struct instr_decode_common *);
+void instr_mov(struct instr_decode_common *);
+void instr_nop(struct instr_decode_common *);
+void instr_or(struct instr_decode_common *);
 
 #endif

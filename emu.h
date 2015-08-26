@@ -56,6 +56,23 @@ typedef unsigned int uns;
 
 #endif
 
+/* SREG is accessible in data memory as an IO port */
+#define	IO_BASE		0x20
+#define	SREG		0x5F
+#define	SREG_IO		(SREG - IO_BASE)
+
+#define	EIO_BASE	0x60
+
+/* Status flags */
+#define	SREG_C		0x01
+#define	SREG_Z		0x02
+#define	SREG_N		0x04
+#define	SREG_V		0x08
+#define	SREG_S		0x10
+#define	SREG_H		0x20
+#define	SREG_T		0x40
+#define	SREG_I		0x80
+
 extern uint32_t		 pc;
 extern uint32_t		 pc_start;
 extern uint8_t		 memory[0x1000000];

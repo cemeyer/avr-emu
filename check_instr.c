@@ -73,6 +73,44 @@ START_TEST(test_mov)
 }
 END_TEST
 
+START_TEST(test_or)
+{
+	uint16_t code[] = {
+		0x2800 | /*r_rrrr*/ 0x20f | /*ddddd*/ 0x1e0,	/* or r30,r31 */
+		0x2800 | /*r_rrrr*/ 0x20d | /*ddddd*/ 0x050,	/* or r5,r29 */
+		0x2800 | /*r_rrrr*/ 0x005 | /*ddddd*/ 0x000,	/* or r0,r5 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0x0;
+	memory[30] = 0x0;
+
+	memory[29] = 0xaa;
+	memory[5] = 0x55;
+
+	memory[0] = 0xff;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	// OR(0, 0) = 0
+	ck_assert_uint_eq(memory[30], 0x0);
+	ck_assert_uint_eq(memory[SREG], SREG_Z);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	// OR(0xaa, 0x55) = 0xff
+	ck_assert_uint_eq(memory[5], 0xff);
+	ck_assert_uint_eq(memory[SREG], SREG_N | SREG_S);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	// OR(0xff, 0xff) = 0xff
+	ck_assert_uint_eq(memory[0], 0xff);
+	ck_assert_uint_eq(memory[SREG], SREG_N | SREG_S);
+}
+END_TEST
+
 #if 0
 static void
 _ck_assert_flags(unsigned line, uint16_t exp)
@@ -1401,9 +1439,10 @@ suite_instr(void)
 	tcase_add_test(t, test_nop);
 	suite_add_tcase(s, t);
 
-	t = tcase_create("mov");
+	t = tcase_create("basic");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_mov);
+	tcase_add_test(t, test_or);
 	suite_add_tcase(s, t);
 
 #if 0

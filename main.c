@@ -30,8 +30,9 @@ FILE		*tracefile;
 GHashTable	*input_record;			// insns -> inprec
 
 static struct instr_decode avr_instr[] = {
-	{ 0x0000, 0xffff, instr_nop },
 	{ 0x2c00, 0xfc00, instr_mov, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x0000, 0xffff, instr_nop },
+	{ 0x2800, 0xfc00, instr_or, .ddddd84 = true, .rrrrr9_30 = true },
 };
 
 void
@@ -187,6 +188,9 @@ emulate1(void)
 		idc.rrrrr = (bits(instr, 9, 9) >> 5) | bits(instr, 3, 0);
 
 	avr_instr[i].code(&idc);
+	memory[SREG] &= ~idc.clrflags;
+	memory[SREG] |= idc.setflags;
+
 	pc += instr_size;
 
 	if (!replay_mode && tracefile) {
