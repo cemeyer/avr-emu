@@ -1,24 +1,33 @@
-FLAGS=-Wall -Wextra -std=gnu99 -Wno-unused-function -Wno-unused-variable -Wno-missing-field-initializers
-SAFEFLAGS=$(FLAGS) -fexceptions
-#OPTFLAGS=`rpm -E %optflags` -O3
-EXTRAFLAGS=
-NEWGCCFLAGS=-grecord-gcc-switches -fstack-protector-strong --param=ssp-buffer-size=4
-OPTFLAGS=-O3 -g -pipe -m64 -mtune=native -march=native $(NEWGCCFLAGS)
-DBGFLAGS=-O0 -g -pipe -m64 -mtune=native -march=native $(NEWGCCFLAGS)
-GLIB_FLAGS=`pkg-config --cflags glib-2.0`
-GLIB_LDFLAGS=`pkg-config --libs glib-2.0`
+PROG=		avr-emu
+SRCS=		main.c gdbstub.c
+HDRS=		emu.h
+CHECK_SRCS=	check_instr.c
 
-msp430-emu: main.c emu.h gdbstub.c
-	cc $(OPTFLAGS) $(SAFEFLAGS) $(GLIB_FLAGS) $< gdbstub.c -o $@ $(GLIB_LDFLAGS)
+WARNFLAGS=	-Wall -Wextra -std=gnu11 -Wno-unused-function -Wno-unused-variable -Wno-missing-field-initializers
+OTHERFLAGS=	-fexceptions -Wp,-D_FORTIFY_SOURCE=2
+OPTFLAGS=	-O3 -g -pipe -m64 -mtune=native -march=native
 
-msp430-sym: main.c emu.h gdbstub.c
-	cc $(OPTFLAGS) $(SAFEFLAGS) $(GLIB_FLAGS) -DSYMBOLIC=1 $< gdbstub.c -o $@ $(GLIB_LDFLAGS)
+GLIB_FLAGS=	`pkg-config --cflags glib-2.0`
+GLIB_LDFLAGS=	`pkg-config --libs glib-2.0`
 
-check: check_instr
+# Platform
+CC_VER=		$(cc --version)
+ifneq (,$(findstring GCC,$(CC_VER)))
+    # Perhaps a check for a recent version belongs here.
+    NEWGCCFLAGS=	-grecord-gcc-switches -fstack-protector-strong --param=ssp-buffer-size=4
+endif
+
+FLAGS=		$(WARNFLAGS) $(OTHERFLAGS) $(OPTFLAGS) $(GLIB_FLAGS) $(NEWGCCFLAGS) $(CFLAGS)
+LDLIBS=		$(GLIB_LDFLAGS)
+
+$(PROG): $(SRCS) $(HDRS)
+	cc $(FLAGS) $(SRCS) -o $@ $(LDLIBS)
+
+checkrun: check_instr
 	./check_instr
 
-check_instr: check_instr.c main.c emu.h
-	cc $(DBGFLAGS) $(FLAGS) $(GLIB_FLAGS) -DSYMBOLIC=1 -DEMU_CHECK $< main.c -lcheck $(GLIB_LDFLAGS) $(EXTRAFLAGS) -o $@
+check_instr: $(CHECK_SRCS) $(SRCS) $(HDRS)
+	cc $(FLAGS) -O0 -DEMU_CHECK $(CHECK_SRCS) $(SRCS) -o $@ -lcheck $(LDLIBS)
 
 clean:
-	rm -f check_instr msp430-sym msp430-emu
+	rm -f check_instr avr-emu
