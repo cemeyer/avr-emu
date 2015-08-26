@@ -1,9 +1,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <err.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+
+#include <err.h>
 #include <poll.h>
 #include <sysexits.h>
 #include <unistd.h>
@@ -23,8 +24,9 @@ GHashTable	*breakpoints;	// addr -> NULL
 
 static void	 gdb_cmd(char *c, char *pound);
 
-#define CMD_HANDLER(name) \
+#define CMD_HANDLER(name)						\
 static void	 gdb_##name(const char *cmd, const void *extra)
+
 CMD_HANDLER(getregs);
 CMD_HANDLER(setregs);
 CMD_HANDLER(readmem);
@@ -348,10 +350,12 @@ gdbstub_intr(void)
 	if (stepone) {
 		interact = true;
 		stepone = false;
+#if 0
 	} else if (g_hash_table_contains(breakpoints, ptr(registers[PC]))) {
 		printf("Breakpoint @%04x\n", (uns)registers[PC]);
 		interact = true;
 		gdbstub_breakpoint();
+#endif
 	}
 
 	// XXX IF we broke, or single-stepped after previous request, then we
@@ -385,11 +389,12 @@ gdbstub_stopped(void)
 // char* cmd, void* extra
 CMD_HANDLER(getregs)
 {
-	char buf[16*4+1];
-	int rc;
 
 	(void)cmd;
 	(void)extra;
+#if 0
+	char buf[16*4+1];
+	int rc;
 
 	for (unsigned i = 0; i < 16; i++) {
 		rc = sprintf(&buf[i*4], "%02x%02x", registers[i] & 0xff,
@@ -398,10 +403,15 @@ CMD_HANDLER(getregs)
 	}
 
 	gdb_sendstr(buf);
+#endif
 }
 
 CMD_HANDLER(setregs)
 {
+
+	(void)cmd;
+	(void)extra;
+#if 0
 	unsigned reglo, reghi, i;
 	int rc;
 
@@ -419,6 +429,7 @@ CMD_HANDLER(setregs)
 	}
 
 	gdb_sendstr("OK");
+#endif
 }
 
 // Read/write memory as a stream of bytes
