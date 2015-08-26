@@ -167,15 +167,7 @@ emulate1(void)
 	pc_start = pc;
 	instr_size = 2;
 
-#ifdef BF
-	if ((pc & 0x1) != 0) {
-		//printf("insn addr unaligned");
-		off = true;
-		return;
-	}
-#else
 	ASSERT((pc & 0x1) == 0, "insn addr unaligned");
-#endif
 
 	instr = romword(pc);
 	(void)instr;
@@ -267,9 +259,7 @@ emulate(void)
 			break;
 
 		if (insnlimit && insns >= insnlimit) {
-#ifndef BF
 			printf("\nXXX Hit insn limit, halting XXX\n");
-#endif
 			break;
 		}
 	}
@@ -279,9 +269,6 @@ void
 _unhandled(const char *f, unsigned l, uint16_t instr)
 {
 
-#ifdef BF
-	off = true;
-#else
 	printf("%s:%u: Instruction: %#04x @PC=%#06x is not implemented\n",
 	    f, l, (unsigned)instr, (unsigned)pc_start);
 	printf("Raw at PC: ");
@@ -289,16 +276,12 @@ _unhandled(const char *f, unsigned l, uint16_t instr)
 		printf("%04x", flash[pc_start + i]);
 	printf("\n");
 	abort_nodump();
-#endif
 }
 
 void
 _illins(const char *f, unsigned l, uint16_t instr)
 {
 
-#ifdef BF
-	off = true;
-#else
 	printf("%s:%u: ILLEGAL Instruction: %#04x @PC=%#06x\n",
 	    f, l, (unsigned)instr, (unsigned)pc_start);
 	printf("Raw at PC: ");
@@ -306,7 +289,6 @@ _illins(const char *f, unsigned l, uint16_t instr)
 		printf("%04x", flash[pc_start + i]);
 	printf("\n");
 	abort_nodump();
-#endif
 }
 
 #ifndef REALLYFAST
