@@ -30,6 +30,7 @@ struct instr_decode {
 
 void instr_adc(struct instr_decode_common *);
 void instr_adiw(struct instr_decode_common *);
+void instr_and(struct instr_decode_common *);
 void instr_call(struct instr_decode_common *);
 void instr_in(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);

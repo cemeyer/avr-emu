@@ -452,6 +452,36 @@ START_TEST(test_adiw)
 }
 END_TEST
 
+START_TEST(test_and)
+{
+	uint16_t code[] = {
+		0x2000 | 0x01,		/* and r0,r1 */
+		0x2000 | 0x45,		/* and r4,r5 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[1] = 0xff;
+	memory[0] = 0xff;
+
+	memory[SREG] = sreg_start = SREG_I | SREG_T | SREG_H | SREG_C;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[0], 0xff);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_N | SREG_S);
+
+	memory[4] = 0xff;
+	memory[5] = 0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[4], 0x0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -467,6 +497,7 @@ suite_instr(void)
 
 	t = tcase_create("basic");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_and);
 	tcase_add_test(t, test_call);
 	tcase_add_test(t, test_in);
 	tcase_add_test(t, test_mov);
