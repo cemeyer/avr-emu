@@ -202,7 +202,6 @@ START_TEST(test_movw)
 
 	install_words(code, PC_START, sizeof(code));
 
-	/* The word pairs are little endian?! 0xabcd: */
 	memory[31] = 0xab;
 	memory[30] = 0xcd;
 

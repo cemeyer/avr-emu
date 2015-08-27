@@ -161,7 +161,7 @@ memword(uint32_t addr)
 	    "load outside 24-bit addressable data memory: %#x",
 	    (unsigned)addr);
 #endif
-	return (memory[addr + 1] | ((uint16_t)memory[addr] << 8));
+	return (memory[addr] | ((uint16_t)memory[addr + 1] << 8));
 }
 
 static inline void
@@ -172,8 +172,8 @@ memwriteword(uint32_t addr, uint16_t word)
 	ASSERT((addr & 0x1) == 0, "word store unaligned: %#04x",
 	    (uns)addr);
 #endif
-	memory[addr] = (word >> 8) & 0xff;
-	memory[addr + 1] = word & 0xff;
+	memory[addr] = word & 0xff;
+	memory[addr + 1] = (word >> 8) & 0xff;
 }
 
 /*
