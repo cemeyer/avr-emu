@@ -2,6 +2,38 @@
 #include "instr.h"
 
 static inline void
+asr_flags8(uint8_t res, uint8_t rd, uint8_t *set, uint8_t *clr)
+{
+
+	if (res & 0x80)
+		*set |= SREG_N;
+	else
+		*clr |= SREG_N;
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+
+	if (rd & 0x1)
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+
+	if (((*set & SREG_C) && (*clr & SREG_N)) ||
+	    ((*clr & SREG_C) && (*set & SREG_N)))
+		*set |= SREG_V;
+	else
+		*clr |= SREG_V;
+
+	if (((*set & SREG_V) && (*clr & SREG_N)) ||
+	    ((*clr & SREG_V) && (*set & SREG_N)))
+		*set |= SREG_S;
+	else
+		*clr |= SREG_S;
+}
+
+static inline void
 logic_flags8(uint8_t result, uint8_t *setflags, uint8_t *clrflags)
 {
 
@@ -161,6 +193,18 @@ instr_andi(struct instr_decode_common *idc)
 
 	memory[idc->ddddd] &= idc->imm_u8;
 	logic_flags8(memory[idc->ddddd], &idc->setflags, &idc->clrflags);
+}
+
+void
+instr_asr(struct instr_decode_common *idc)
+{
+	uint8_t rd, res;
+
+	rd = memory[idc->ddddd];
+	res = (rd >> 1) | (0x80 & rd);
+	memory[idc->ddddd] = res;
+
+	asr_flags8(res, rd, &idc->setflags, &idc->clrflags);
 }
 
 void

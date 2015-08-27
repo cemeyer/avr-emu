@@ -508,6 +508,57 @@ START_TEST(test_andi)
 }
 END_TEST
 
+START_TEST(test_asr)
+{
+	uint16_t code[] = {
+		0x9405 | 0x1f0,		/* asr r31 */
+		0x9405 | 0x1f0,		/* asr r31 */
+		0x9405 | 0x1f0,		/* asr r31 */
+		0x9405 | 0x1f0,		/* asr r31 */
+		0x9405 | 0x1f0,		/* asr r31 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+	memory[31] = 0xff;
+	memory[SREG] = sreg_start = SREG_I | SREG_T | SREG_H;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[31], 0xff);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_N | SREG_C | SREG_S);
+
+	memory[31] = 0x81;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[31], 0xc0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_N | SREG_C | SREG_S);
+
+	memory[31] = 0x7f;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[31], 0x3f);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C | SREG_V | SREG_S);
+
+	memory[31] = 0x70;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memory[31], 0x38);
+	ck_assert_uint_eq(memory[SREG], sreg_start);
+
+	memory[31] = 0x1;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 5);
+	ck_assert_uint_eq(memory[31], 0);
+	ck_assert_uint_eq(memory[SREG],
+	    sreg_start | SREG_C | SREG_Z | SREG_V | SREG_S);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -545,13 +596,18 @@ suite_instr(void)
 	suite_add_tcase(s, t);
 
 	t = tcase_create("math");
-	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
+	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_adc);
 	tcase_add_test(t, test_add);
 	tcase_add_test(t, test_adiw);
 	tcase_add_test(t, test_mul);
 	tcase_add_test(t, test_muls);
 	tcase_add_test(t, test_mulsu);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("shifts");
+	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_asr);
 	suite_add_tcase(s, t);
 
 	return s;
