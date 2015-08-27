@@ -621,6 +621,28 @@ START_TEST(test_bld)
 }
 END_TEST
 
+START_TEST(test_brb)
+{
+	uint16_t code[] = {
+		0xf400 | 0x10 /*k=2*/ | 0x7 /*SREG_I*/,		/* brbc I, 2 */
+		0 /* skipped */,
+		0xf000 | 0x1f8 /*k=63*/ | 0x0 /*SREG_C*/,	/* brbs C, 63 */
+		0xf000 | 0x3f0 /*k=-2*/ | 0x6 /*SREG_T*/,	/* brbs T, -2 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[SREG] = SREG_T | SREG_C;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2 + 63 + 1);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -673,6 +695,11 @@ suite_instr(void)
 	t = tcase_create("shifts");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_asr);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("branches");
+	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_brb);
 	suite_add_tcase(s, t);
 
 	return s;

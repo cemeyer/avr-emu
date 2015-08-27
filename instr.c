@@ -226,13 +226,31 @@ void
 instr_bld(struct instr_decode_common *idc)
 {
 	uint8_t sss;
-	bool clr;
 
 	sss = idc->rrrrr - 16;
 	if ((memory[SREG] & SREG_T) != 0)
 		memory[idc->ddddd] |= (1 << sss);
 	else
 		memory[idc->ddddd] &= ~(1 << sss);
+}
+
+void
+instr_brb(struct instr_decode_common *idc)
+{
+	uint8_t sss;
+	int8_t imm_s8;
+	bool clr;
+
+	sss = idc->rrrrr - 16;
+	clr = (idc->instr & 0x0400);
+	imm_s8 = (bits(idc->instr, 9, 3) >> 3);
+	if ((imm_s8 & 0x40) != 0)
+		imm_s8 |= 0x80;
+
+	if ((memory[SREG] & (1 << sss)) != 0 && !clr)
+		pc += imm_s8;
+	else if ((memory[SREG] & (1 << sss)) == 0 && clr)
+		pc += imm_s8;
 }
 
 void
