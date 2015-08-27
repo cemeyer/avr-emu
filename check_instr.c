@@ -357,7 +357,7 @@ START_TEST(test_adc)
 
 	memory[0] = 0xf0;
 	memory[1] = 0x0f;
-	sreg_start = 0xc0;
+	sreg_start = SREG_I | SREG_T;
 	memory[SREG] = sreg_start | SREG_C;
 
 	emulate1();
@@ -396,7 +396,7 @@ START_TEST(test_add)
 
 	memory[0] = 0xf1;
 	memory[1] = 0x0f;
-	memory[SREG] = sreg_start = 0xc0;
+	memory[SREG] = sreg_start = SREG_I | SREG_T;
 
 	emulate1();
 	ck_assert_uint_eq(pc, PC_START + 1);
@@ -418,6 +418,37 @@ START_TEST(test_add)
 	ck_assert_uint_eq(pc, PC_START + 3);
 	ck_assert_uint_eq(memory[4], 0xff);
 	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_N | SREG_S);
+}
+END_TEST
+
+START_TEST(test_adiw)
+{
+	uint16_t code[] = {
+		0x9600 | 0x00 | 0x5,		/* addiw r25:24, $5 */
+		0x9600 | 0x30 | 0xcf,		/* addiw r31:30, $3f */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[24] = 0xfb;
+	memory[25] = 0xff;
+	memory[SREG] = sreg_start = SREG_I | SREG_T | SREG_H;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[24], 0);
+	ck_assert_uint_eq(memory[25], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C | SREG_Z);
+
+	memory[30] = 0xff;
+	memory[31] = 0x7f;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[30], 0x3e);
+	ck_assert_uint_eq(memory[31], 0x80);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_V | SREG_N);
 }
 END_TEST
 
@@ -459,6 +490,7 @@ suite_instr(void)
 	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
 	tcase_add_test(t, test_adc);
 	tcase_add_test(t, test_add);
+	tcase_add_test(t, test_adiw);
 	tcase_add_test(t, test_mul);
 	tcase_add_test(t, test_muls);
 	tcase_add_test(t, test_mulsu);

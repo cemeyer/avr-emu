@@ -34,37 +34,8 @@ mul_flags16(uint16_t res, uint8_t *set, uint8_t *clr)
 }
 
 static inline void
-pushbyte(uint8_t b)
+adc_flags8(uint8_t res, uint8_t rd, uint8_t rr, uint8_t *set, uint8_t *clr)
 {
-	uint16_t sp;
-
-	sp = getsp();
-	memory[sp] = b;
-	setsp(sp - 1);
-}
-
-void
-instr_adc(struct instr_decode_common *idc)
-{
-	bool carry_mode;
-	uint8_t rr, rd, res;
-
-	carry_mode = bits(idc->instr, 12, 12);
-
-	rr = memory[idc->rrrrr];
-	rd = memory[idc->ddddd];
-
-	res = rd + rr;
-	if (carry_mode && (memory[SREG] & SREG_C) != 0)
-		res += 1;
-
-	memory[idc->ddddd] = res;
-
-	uint8_t *set;
-	uint8_t *clr;
-
-	set = &idc->setflags;
-	clr = &idc->clrflags;
 
 	if (res & 0x80)
 		*set |= SREG_N;
@@ -98,6 +69,82 @@ instr_adc(struct instr_decode_common *idc)
 		*set |= SREG_H;
 	else
 		*clr |= SREG_H;
+}
+
+static inline void
+adiw_flags16(uint16_t res, uint16_t rd, uint8_t *set, uint8_t *clr)
+{
+
+	if (res & 0x8000)
+		*set |= SREG_N;
+	else
+		*clr |= SREG_N;
+
+	if (0x8000 & ~rd & res)
+		*set |= SREG_V;
+	else
+		*clr |= SREG_V;
+
+	if (((*set & SREG_N) && (*clr & SREG_V)) ||
+	    ((*clr & SREG_N) && (*set & SREG_V)))
+		*set |= SREG_S;
+	else
+		*clr |= SREG_S;
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+
+	if (0x8000 & ~res & rd)
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+}
+
+static inline void
+pushbyte(uint8_t b)
+{
+	uint16_t sp;
+
+	sp = getsp();
+	memory[sp] = b;
+	setsp(sp - 1);
+}
+
+void
+instr_adc(struct instr_decode_common *idc)
+{
+	bool carry_mode;
+	uint8_t rr, rd, res;
+
+	carry_mode = bits(idc->instr, 12, 12);
+
+	rr = memory[idc->rrrrr];
+	rd = memory[idc->ddddd];
+
+	res = rd + rr;
+	if (carry_mode && (memory[SREG] & SREG_C) != 0)
+		res += 1;
+
+	memory[idc->ddddd] = res;
+	adc_flags8(res, rd, rr, &idc->setflags, &idc->clrflags);
+}
+
+void
+instr_adiw(struct instr_decode_common *idc)
+{
+	uint16_t imm, res, rd;
+	uint8_t dd;
+
+	dd = 24 + (bits(idc->instr, 5, 4) >> 3);
+	imm = (bits(idc->instr, 7, 6) >> 2) | bits(idc->instr, 3, 0);
+
+	rd = memword(dd);
+	res = rd + imm;
+	memwriteword(dd, res);
+
+	adiw_flags16(res, rd, &idc->setflags, &idc->clrflags);
 }
 
 void
