@@ -42,20 +42,6 @@ typedef unsigned int uns;
 	abort_nodump();							\
 } while (0)
 
-#ifdef REALLYFAST
-
-#define	_MASK(N)	((1U << (N)) - 1)
-#define	bits(N, H, L)	((N) & _MASK(H+1) & ~_MASK(L))
-
-#define	memwriteword(addr, word) do {					\
-	memory[addr] = (word) >> 8;					\
-	memory[addr + 1] = (word) & 0xff;				\
-} while (0)
-#define	memword(addr)	(ntohs(*(uint16_t*)&memory[(addr) & 0xffffff]))
-#define	romword(addr)	(flash[((addr) & 0x7fffff)])
-
-#endif
-
 /* SREG is accessible in data memory as an IO port */
 #define	SREG		0x5F
 #define	SP_HI		0x5E
@@ -89,21 +75,11 @@ extern uint64_t		 insns;
 extern uint64_t		 insnreplaylim;
 extern uint64_t		 insnlimit;
 
-uint16_t	 getsp(void);
-void		 setsp(uint16_t);
-
 void		 abort_nodump(void);
 void		 init(void);
 void		 destroy(void);
 void		 emulate(void);
 void		 emulate1(void);
-#ifndef	REALLYFAST
-uint16_t	 membyte(uint32_t addr);
-uint16_t	 memword(uint32_t addr);
-uint16_t	 romword(uint32_t addr_word);
-void		 memwriteword(uint32_t addr, uint16_t word);
-uint16_t	 bits(uint16_t v, unsigned max, unsigned min);
-#endif
 #define	unhandled(instr)	_unhandled(__FILE__, __LINE__, instr)
 void		 _unhandled(const char *f, unsigned l, uint16_t instr);
 #define	illins(instr)		_illins(__FILE__, __LINE__, instr)
@@ -123,5 +99,97 @@ void		 gdbstub_intr(void);
 void		 gdbstub_stopped(void);
 void		 gdbstub_interactive(void);
 void		 gdbstub_breakpoint(void);
+
+/* Alternative bits() implementation, if the compiler isn't smart enough. */
+#if 0
+#define	_MASK(N)	((1U << (N)) - 1)
+#define	m_bits(N, H, L)	((N) & _MASK(H+1) & ~_MASK(L))
+#endif
+
+static inline uint16_t
+bits(uint16_t v, unsigned max, unsigned min)
+{
+	uint16_t mask;
+
+#ifndef	REALLYFAST
+	ASSERT(max < 16 && max >= min, "bit-select");
+	ASSERT(min < 16, "bit-select");
+#endif
+
+	mask = ((unsigned)1 << (max+1)) - 1;
+	if (min > 0)
+		mask &= ~( (1<<min) - 1 );
+
+	return v & mask;
+}
+
+static inline uint16_t
+getsp(void)
+{
+
+	return (((uint16_t)memory[SP_HI] << 8) | memory[SP_LO]);
+}
+
+static inline void
+setsp(uint16_t sp)
+{
+
+	memory[SP_LO] = (sp & 0xff);
+	memory[SP_HI] = (sp >> 8);
+}
+
+static inline uint16_t
+membyte(uint32_t addr)
+{
+
+#ifndef	REALLYFAST
+	ASSERT((addr & ~0xffffff) == 0,
+	    "load outside 24-bit addressable data memory: %#x",
+	    (unsigned)addr);
+#endif
+	return (memory[addr]);
+}
+
+static inline uint16_t
+memword(uint32_t addr)
+{
+
+#ifndef	REALLYFAST
+	ASSERT((addr & 0x1) == 0, "word load unaligned: %#04x",
+	    (unsigned)addr);
+	ASSERT((addr & ~0xffffff) == 0,
+	    "load outside 24-bit addressable data memory: %#x",
+	    (unsigned)addr);
+#endif
+	return (memory[addr + 1] | ((uint16_t)memory[addr] << 8));
+}
+
+static inline void
+memwriteword(uint32_t addr, uint16_t word)
+{
+
+#ifndef	REALLYFAST
+	ASSERT((addr & 0x1) == 0, "word store unaligned: %#04x",
+	    (uns)addr);
+#endif
+	memory[addr] = (word >> 8) & 0xff;
+	memory[addr + 1] = word & 0xff;
+}
+
+/*
+ * Flash is word-addressed (even though some operations select a single byte
+ * from that word).  In particular PC addressed a word only.
+ */
+static inline uint16_t
+romword(uint32_t addr_word)
+{
+
+#ifndef	REALLYFAST
+	ASSERT((addr_word & ~0x7fffff) == 0,
+	    "load outside 24-bit addressable program memory: %#x",
+	    (unsigned)addr_word);
+#endif
+	return (flash[addr_word]);
+}
 
 #endif
