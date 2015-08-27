@@ -66,8 +66,10 @@ typedef unsigned int uns;
 
 extern uint32_t		 pc;
 extern uint32_t		 pc_start;
+extern uint32_t		 instr_size;
 extern uint8_t		 memory[0x1000000];
 extern uint16_t		 flash[ 0x1000000 / sizeof(uint16_t)];
+extern bool		 pc22;
 extern bool		 off;
 extern bool		 replay_mode;
 extern bool		 stepone;

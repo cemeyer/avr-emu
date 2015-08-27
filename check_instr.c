@@ -24,6 +24,15 @@ setup_machine(void)
 }
 
 void
+setup_machine22(void)
+{
+
+	// zero regs/mem, clear symbols
+	init();
+	pc22 = true;
+}
+
+void
 teardown_machine(void)
 {
 
@@ -212,6 +221,43 @@ START_TEST(test_movw)
 }
 END_TEST
 
+START_TEST(test_call)
+{
+	uint16_t code[] = {
+		0x940e /*kkkkk_k = 0*/,		/* call 0xdead */
+		0xdead
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, 0xdead);
+	ck_assert_uint_eq(getsp(), 0xfffd);
+	ck_assert_uint_eq(memory[0xffff], (PC_START + 2) & 0xff);
+	ck_assert_uint_eq(memory[0xfffe], (PC_START + 2) >> 8);
+}
+END_TEST
+
+START_TEST(test_call22)
+{
+	uint16_t code[] = {
+		0x940e | /*kkkkk_k*/ 0x1f1,	/* call 0x3fbeef */
+		0xbeef
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, 0x3fbeef);
+	ck_assert_uint_eq(getsp(), 0xfffc);
+	ck_assert_uint_eq(memory[0xffff], (PC_START + 2) & 0xff);
+	ck_assert_uint_eq(memory[0xfffe], ((PC_START + 2) >> 8) & 0xff);
+	ck_assert_uint_eq(memory[0xfffd], (PC_START + 2) >> 16);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -227,6 +273,7 @@ suite_instr(void)
 
 	t = tcase_create("basic");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
+	tcase_add_test(t, test_call);
 	tcase_add_test(t, test_in);
 	tcase_add_test(t, test_mov);
 	tcase_add_test(t, test_or);
@@ -238,6 +285,11 @@ suite_instr(void)
 	t = tcase_create("regpairs");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_movw);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("22-bit pc");
+	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
+	tcase_add_test(t, test_call22);
 	suite_add_tcase(s, t);
 
 	return s;

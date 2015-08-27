@@ -18,6 +18,34 @@ logic_flags8(uint8_t result, uint8_t *setflags, uint8_t *clrflags)
 		*clrflags |= SREG_Z;
 }
 
+static inline void
+pushbyte(uint8_t b)
+{
+	uint16_t sp;
+
+	sp = getsp();
+	memory[sp] = b;
+	setsp(sp - 1);
+}
+
+void
+instr_call(struct instr_decode_common *idc)
+{
+	uint32_t addr, pc2;
+
+	addr = idc->imm_u16;
+	addr |= (((uint32_t)
+		(bits(idc->instr, 8, 4) >> 3) | bits(idc->instr, 0, 0)) << 16);
+
+	pc2 = pc_start + 2;
+	pushbyte(pc2 & 0xff);
+	pushbyte((pc2 >> 8) & 0xff);
+	if (pc22)
+		pushbyte(pc2 >> 16);
+
+	pc = addr - instr_size;
+}
+
 void
 instr_in(struct instr_decode_common *idc)
 {
@@ -77,11 +105,8 @@ instr_out(struct instr_decode_common *idc)
 void
 instr_push(struct instr_decode_common *idc)
 {
-	uint16_t sp;
 
-	sp = getsp();
-	memory[sp] = memory[idc->ddddd];
-	setsp(sp - 1);
+	pushbyte(memory[idc->ddddd]);
 }
 
 void
