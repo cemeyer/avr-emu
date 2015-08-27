@@ -559,6 +559,47 @@ START_TEST(test_asr)
 }
 END_TEST
 
+START_TEST(test_bclr)
+{
+	uint16_t code[] = {
+		0x9488 | 0x70,	/* bclr I ("CLI" psuedo) */
+		0x9488 | 0x10,	/* bclr Z */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+	memory[SREG] = sreg_start = 0xff;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[SREG], sreg_start & ~SREG_I);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[SREG], sreg_start & ~(SREG_I | SREG_Z));
+}
+END_TEST
+
+START_TEST(test_bset)
+{
+	uint16_t code[] = {
+		0x9408 | 0x60,	/* bset T */
+		0x9408 | 0x30,	/* bset V */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	memory[SREG] = 0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[SREG], SREG_T);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[SREG], SREG_T | SREG_V);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -576,6 +617,8 @@ suite_instr(void)
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_and);
 	tcase_add_test(t, test_andi);
+	tcase_add_test(t, test_bclr);
+	tcase_add_test(t, test_bset);
 	tcase_add_test(t, test_call);
 	tcase_add_test(t, test_in);
 	tcase_add_test(t, test_mov);

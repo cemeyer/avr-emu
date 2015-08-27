@@ -208,6 +208,21 @@ instr_asr(struct instr_decode_common *idc)
 }
 
 void
+instr_bclrset(struct instr_decode_common *idc)
+{
+	uint8_t sss;
+	bool clr;
+
+	sss = idc->ddddd - 16;
+	clr = (idc->instr & 0x80);
+
+	if (clr)
+		idc->clrflags |= (1 << sss);
+	else
+		idc->setflags |= (1 << sss);
+}
+
+void
 instr_call(struct instr_decode_common *idc)
 {
 	uint32_t addr, pc2;
