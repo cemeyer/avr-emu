@@ -39,7 +39,7 @@ GHashTable	*input_record;			// insns -> inprec
 static struct instr_decode avr_instr[] = {
 	{ 0x0000, 0xffff, instr_nop },
 	{ 0x0100, 0xff00, instr_movw, .dddd74 = true, .rrrr30 = true },
-	{ 0x0200, 0xff00, instr_unimp/*MULS*/, .dddd74 = true, .rrrr30 = true },
+	{ 0x0200, 0xff00, instr_muls, .dddd74 = true, .rrrr30 = true },
 	{ 0x0300, 0xff88, instr_unimp/*MULSU*/, .ddd64 = true, .rrr20 = true },
 	{ 0x0308, 0xff88, instr_unimp/*FMUL*/, .ddd64 = true, .rrr20 = true },
 	{ 0x0380, 0xff80, instr_unimp/*FMULS(U)*/, .ddd64 = true, .rrr20 = true },

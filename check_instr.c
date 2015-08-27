@@ -290,6 +290,33 @@ START_TEST(test_mul)
 }
 END_TEST
 
+START_TEST(test_muls)
+{
+	uint16_t code[] = {
+		0x0200 | 0xfe,		/* muls r31,r30 */
+		0x0200 | 0x45,		/* muls r20, r21 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0xff;
+	memory[30] = 0xff;
+	memory[4] = 0x15;
+	memory[SREG] = sreg_start = 0xff & ~(SREG_Z | SREG_C);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memword(0), 1);
+	ck_assert_uint_eq(memory[SREG], sreg_start);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memword(0), 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -327,6 +354,7 @@ suite_instr(void)
 	t = tcase_create("math");
 	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
 	tcase_add_test(t, test_mul);
+	tcase_add_test(t, test_muls);
 	suite_add_tcase(s, t);
 
 	return s;
