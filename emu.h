@@ -57,10 +57,13 @@ typedef unsigned int uns;
 #endif
 
 /* SREG is accessible in data memory as an IO port */
-#define	IO_BASE		0x20
 #define	SREG		0x5F
 #define	SP_HI		0x5E
 #define	SP_LO		0x5D
+#define	EIND		0x5C
+#define	RAMPZ		0x5B
+
+#define	IO_BASE		0x20
 #define	SREG_IO		(SREG - IO_BASE)
 
 #define	EIO_BASE	0x60
