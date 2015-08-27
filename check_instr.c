@@ -301,14 +301,41 @@ START_TEST(test_muls)
 	install_words(code, PC_START, sizeof(code));
 
 	memory[31] = 0xff;
-	memory[30] = 0xff;
-	memory[4] = 0x15;
+	memory[30] = 0x2;
+	memory[20] = 0x15;
 	memory[SREG] = sreg_start = 0xff & ~(SREG_Z | SREG_C);
 
 	emulate1();
 	ck_assert_uint_eq(pc, PC_START + 1);
-	ck_assert_uint_eq(memword(0), 1);
-	ck_assert_uint_eq(memory[SREG], sreg_start);
+	ck_assert_uint_eq(memword(0), 0xfffe);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memword(0), 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+}
+END_TEST
+
+START_TEST(test_mulsu)
+{
+	uint16_t code[] = {
+		0x0300 | 0x76,		/* mulsu r23, r22 */
+		0x0300 | 0x45,		/* mulsu r20, r21 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[23] = 0xff;
+	memory[22] = 0xff;
+	memory[20] = 0x15;
+	memory[SREG] = sreg_start = 0xff & ~(SREG_Z | SREG_C);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memword(0), 0xff01);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C);
 
 	emulate1();
 	ck_assert_uint_eq(pc, PC_START + 2);
@@ -355,6 +382,7 @@ suite_instr(void)
 	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
 	tcase_add_test(t, test_mul);
 	tcase_add_test(t, test_muls);
+	tcase_add_test(t, test_mulsu);
 	suite_add_tcase(s, t);
 
 	return s;

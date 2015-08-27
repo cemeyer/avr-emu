@@ -19,6 +19,21 @@ logic_flags8(uint8_t result, uint8_t *setflags, uint8_t *clrflags)
 }
 
 static inline void
+mul_flags16(uint16_t res, uint8_t *set, uint8_t *clr)
+{
+
+	if ((res & 0x8000) != 0)
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+}
+
+static inline void
 pushbyte(uint8_t b)
 {
 	uint16_t sp;
@@ -80,15 +95,7 @@ instr_mul(struct instr_decode_common *idc)
 	res = (uint16_t)memory[idc->ddddd] * (uint16_t)memory[idc->rrrrr];
 	memwriteword(0, res);
 
-	if ((res & 0x8000) != 0)
-		idc->setflags |= SREG_C;
-	else
-		idc->clrflags |= SREG_C;
-
-	if (res == 0)
-		idc->setflags |= SREG_Z;
-	else
-		idc->clrflags |= SREG_Z;
+	mul_flags16(res, &idc->setflags, &idc->clrflags);
 }
 
 void
@@ -103,15 +110,22 @@ instr_muls(struct instr_decode_common *idc)
 	res = rd * rs;
 	memwriteword(0, res);
 
-	if ((res & 0x8000) != 0)
-		idc->setflags |= SREG_C;
-	else
-		idc->clrflags |= SREG_C;
+	mul_flags16(res, &idc->setflags, &idc->clrflags);
+}
 
-	if (res == 0)
-		idc->setflags |= SREG_Z;
-	else
-		idc->clrflags |= SREG_Z;
+void
+instr_mulsu(struct instr_decode_common *idc)
+{
+	uint16_t res;
+	int16_t rd, rs;
+
+	rd = (int8_t)memory[idc->ddddd];
+	rs = (uint8_t)memory[idc->rrrrr];
+
+	res = rd * rs;
+	memwriteword(0, res);
+
+	mul_flags16(res, &idc->setflags, &idc->clrflags);
 }
 
 void
