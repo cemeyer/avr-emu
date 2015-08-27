@@ -156,6 +156,14 @@ instr_and(struct instr_decode_common *idc)
 }
 
 void
+instr_andi(struct instr_decode_common *idc)
+{
+
+	memory[idc->ddddd] &= idc->imm_u8;
+	logic_flags8(memory[idc->ddddd], &idc->setflags, &idc->clrflags);
+}
+
+void
 instr_call(struct instr_decode_common *idc)
 {
 	uint32_t addr, pc2;
