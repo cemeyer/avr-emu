@@ -284,6 +284,22 @@ instr_call(struct instr_decode_common *idc)
 }
 
 void
+instr_cbisbi(struct instr_decode_common *idc)
+{
+	bool set;
+	uint8_t sss, A;
+
+	sss = idc->rrrrr - 16;
+	set = (bits(idc->instr, 9, 9) != 0);
+
+	A = bits(idc->instr, 7, 3) >> 3;
+	if (set)
+		memory[IO_BASE + A] |= (1 << sss);
+	else
+		memory[IO_BASE + A] &= ~(1 << sss);
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;

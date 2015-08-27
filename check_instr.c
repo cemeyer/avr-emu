@@ -665,6 +665,26 @@ START_TEST(test_brb)
 }
 END_TEST
 
+START_TEST(test_cbisbi)
+{
+	uint16_t code[] = {
+		0x9800 | 0xa8 /*A=0x15*/ | 0x3 /*bit 3*/,		/* cbi $0x15, 3 */
+		0x9a00 | 0xa8 /*A=0x15*/ | 0x3 /*bit 3*/,		/* cbi $0x15, 3 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	memory[IO_BASE + 0x15] = 0xff;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[IO_BASE + 0x15], 0xff & ~(1 << 3));
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[IO_BASE + 0x15], 0xff);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -687,6 +707,7 @@ suite_instr(void)
 	tcase_add_test(t, test_bset);
 	tcase_add_test(t, test_bst);
 	tcase_add_test(t, test_call);
+	tcase_add_test(t, test_cbisbi);
 	tcase_add_test(t, test_in);
 	tcase_add_test(t, test_mov);
 	tcase_add_test(t, test_or);
