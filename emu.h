@@ -59,6 +59,8 @@ typedef unsigned int uns;
 /* SREG is accessible in data memory as an IO port */
 #define	IO_BASE		0x20
 #define	SREG		0x5F
+#define	SP_HI		0x5E
+#define	SP_LO		0x5D
 #define	SREG_IO		(SREG - IO_BASE)
 
 #define	EIO_BASE	0x60
@@ -83,6 +85,9 @@ extern bool		 stepone;
 extern uint64_t		 insns;
 extern uint64_t		 insnreplaylim;
 extern uint64_t		 insnlimit;
+
+uint16_t	 getsp(void);
+void		 setsp(uint16_t);
 
 void		 abort_nodump(void);
 void		 init(void);

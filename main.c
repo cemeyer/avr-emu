@@ -9,6 +9,7 @@ struct inprec {
 	char		 ir_inp[0];
 };
 
+/* Machine state */
 uint32_t	 pc,
 		 pc_start,
 		 instr_size;
@@ -16,6 +17,11 @@ uint32_t	 pc,
 uint8_t		 memory[0x1000000];
 /* Program memory is word-addressed */
 uint16_t	 flash[ 0x1000000 / sizeof(uint16_t)];
+
+/* Machine model characteristics */
+bool		 pc22;
+
+/* Emulater / GDB auxiliary info */
 uint64_t	 start;		/* Start time in us */
 uint64_t	 insns;
 uint64_t	 insnlimit;
@@ -69,7 +75,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0x920c, 0xfe0f, instr_unimp/*ST X*/, .ddddd84 = true },
 	{ 0x920d, 0xfe0f, instr_unimp/*ST X+*/, .ddddd84 = true },
 	{ 0x920e, 0xfe0f, instr_unimp/*ST -X*/, .ddddd84 = true },
-	{ 0x920f, 0xfe0f, instr_unimp/*PUSH*/, .ddddd84 = true },
+	{ 0x920f, 0xfe0f, instr_push, .ddddd84 = true },
 	{ 0x9400, 0xfe0f, instr_unimp/*COM*/, .ddddd84 = true },
 	{ 0x9401, 0xfe0f, instr_unimp/*NEG*/, .ddddd84 = true },
 	{ 0x9402, 0xfe0f, instr_unimp/*SWAP*/, .ddddd84 = true },
@@ -124,6 +130,7 @@ void
 init(void)
 {
 
+	pc22 = false;
 	insns = 0;
 	off = false;
 	start = now();
@@ -393,6 +400,23 @@ _illins(const char *f, unsigned l, uint16_t instr)
 		printf("%04x", flash[pc_start + i]);
 	printf("\n");
 	abort_nodump();
+}
+
+// TODO just make all of these inlines in the header and have REALLYFAST key
+// off INVARIANTS for them.
+uint16_t
+getsp(void)
+{
+
+	return (((uint16_t)memory[SP_HI] << 8) | memory[SP_LO]);
+}
+
+void
+setsp(uint16_t sp)
+{
+
+	memory[SP_LO] = (sp & 0xff);
+	memory[SP_HI] = (sp >> 8);
 }
 
 #ifndef REALLYFAST

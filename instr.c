@@ -75,6 +75,16 @@ instr_out(struct instr_decode_common *idc)
 }
 
 void
+instr_push(struct instr_decode_common *idc)
+{
+	uint16_t sp;
+
+	sp = getsp();
+	memory[sp] = memory[idc->ddddd];
+	setsp(sp - 1);
+}
+
+void
 instr_unimp(struct instr_decode_common *idc __unused)
 {
 

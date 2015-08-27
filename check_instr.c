@@ -175,6 +175,25 @@ START_TEST(test_in)
 }
 END_TEST
 
+START_TEST(test_push)
+{
+	uint16_t code[] = {
+		0x920f | /*rrrrr*/ 0x1f0,	/* push r31 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0xab;
+
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(getsp(), 0xfffe);
+	ck_assert_uint_eq(memory[0xffff], 0xab);
+}
+END_TEST
+
 START_TEST(test_movw)
 {
 	uint16_t code[] = {
@@ -214,6 +233,7 @@ suite_instr(void)
 	tcase_add_test(t, test_or);
 	tcase_add_test(t, test_ori);
 	tcase_add_test(t, test_out);
+	tcase_add_test(t, test_push);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("regpairs");
