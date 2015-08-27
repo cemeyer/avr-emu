@@ -44,6 +44,63 @@ pushbyte(uint8_t b)
 }
 
 void
+instr_adc(struct instr_decode_common *idc)
+{
+	bool carry_mode;
+	uint8_t rr, rd, res;
+
+	carry_mode = bits(idc->instr, 12, 12);
+
+	rr = memory[idc->rrrrr];
+	rd = memory[idc->ddddd];
+
+	res = rd + rr;
+	if (carry_mode && (memory[SREG] & SREG_C) != 0)
+		res += 1;
+
+	memory[idc->ddddd] = res;
+
+	uint8_t *set;
+	uint8_t *clr;
+
+	set = &idc->setflags;
+	clr = &idc->clrflags;
+
+	if (res & 0x80)
+		*set |= SREG_N;
+	else
+		*clr |= SREG_N;
+	if ((0x80 & rd & rr & ~res) ||
+	    (0x80 & ~rd & ~rr & res))
+		*set |= SREG_V;
+	else
+		*clr |= SREG_V;
+	if (((*set & SREG_N) && (*clr & SREG_V)) ||
+	    ((*clr & SREG_N) && (*set & SREG_V)))
+		*set |= SREG_S;
+	else
+		*clr |= SREG_S;
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+
+	if ((0x80 & rd & rr) ||
+	    (0x80 & rr & ~res) ||
+	    (0x80 & ~res & rd))
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+	if ((0x08 & rd & rr) ||
+	    (0x08 & rr & ~res) ||
+	    (0x08 & ~res & rd))
+		*set |= SREG_H;
+	else
+		*clr |= SREG_H;
+}
+
+void
 instr_call(struct instr_decode_common *idc)
 {
 	uint32_t addr, pc2;

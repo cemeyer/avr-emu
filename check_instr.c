@@ -344,6 +344,83 @@ START_TEST(test_mulsu)
 }
 END_TEST
 
+START_TEST(test_adc)
+{
+	uint16_t code[] = {
+		0x1c00 | 0x01,		/* adc r0, r1 */
+		0x1c00 | 0x23,		/* adc r2, r3 */
+		0x1c00 | 0x45,		/* adc r4, r5 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[0] = 0xf0;
+	memory[1] = 0x0f;
+	sreg_start = 0xc0;
+	memory[SREG] = sreg_start | SREG_C;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[0], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C | SREG_Z | SREG_H);
+
+	memory[2] = 0x40;
+	memory[3] = 0x40;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[2], 0x81 /* Carry from previous instr */);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_V | SREG_N);
+
+	memory[4] = 0xff;
+	memory[5] = 0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[4], 0xff);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_N | SREG_S);
+}
+END_TEST
+
+START_TEST(test_add)
+{
+	uint16_t code[] = {
+		0x0c00 | 0x01,		/* add r0, r1 */
+		0x0c00 | 0x23,		/* add r2, r3 */
+		0x0c00 | 0x45,		/* add r4, r5 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[0] = 0xf1;
+	memory[1] = 0x0f;
+	memory[SREG] = sreg_start = 0xc0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[0], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C | SREG_Z | SREG_H);
+
+	memory[2] = 0x40;
+	memory[3] = 0x40;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[2], 0x80);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_V | SREG_N);
+
+	memory[4] = 0xff;
+	memory[5] = 0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[4], 0xff);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_N | SREG_S);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -380,6 +457,8 @@ suite_instr(void)
 
 	t = tcase_create("math");
 	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
+	tcase_add_test(t, test_adc);
+	tcase_add_test(t, test_add);
 	tcase_add_test(t, test_mul);
 	tcase_add_test(t, test_muls);
 	tcase_add_test(t, test_mulsu);

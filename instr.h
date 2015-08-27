@@ -28,6 +28,7 @@ struct instr_decode {
 	bool		  imm16 : 1;
 };
 
+void instr_adc(struct instr_decode_common *);
 void instr_call(struct instr_decode_common *);
 void instr_in(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);
