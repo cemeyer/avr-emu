@@ -300,6 +300,30 @@ instr_cbisbi(struct instr_decode_common *idc)
 }
 
 void
+instr_com(struct instr_decode_common *idc)
+{
+	uint8_t res, *set, *clr;
+
+	res = (0xff - memory[idc->ddddd]);
+	memory[idc->ddddd] = res;
+
+	set = &idc->setflags;
+	clr = &idc->clrflags;
+
+	*set |= SREG_C;
+	*clr |= SREG_V;
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+	if ((res & 0x80) != 0)
+		*set |= (SREG_N | SREG_S);
+	else
+		*clr |= (SREG_N | SREG_S);
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;
