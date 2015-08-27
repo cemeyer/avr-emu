@@ -600,6 +600,27 @@ START_TEST(test_bset)
 }
 END_TEST
 
+START_TEST(test_bld)
+{
+	uint16_t code[] = {
+		0xf800 | 0x1f0 | 0x4,	/* bld r31, 4 */
+		0xf800 | 0x1f0 | 0x4,	/* bld r31, 4 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[SREG] = SREG_T;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[31], 1 << 4);
+
+	memory[SREG] = 0;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[31], 0);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -618,6 +639,7 @@ suite_instr(void)
 	tcase_add_test(t, test_and);
 	tcase_add_test(t, test_andi);
 	tcase_add_test(t, test_bclr);
+	tcase_add_test(t, test_bld);
 	tcase_add_test(t, test_bset);
 	tcase_add_test(t, test_call);
 	tcase_add_test(t, test_in);

@@ -223,6 +223,19 @@ instr_bclrset(struct instr_decode_common *idc)
 }
 
 void
+instr_bld(struct instr_decode_common *idc)
+{
+	uint8_t sss;
+	bool clr;
+
+	sss = idc->rrrrr - 16;
+	if ((memory[SREG] & SREG_T) != 0)
+		memory[idc->ddddd] |= (1 << sss);
+	else
+		memory[idc->ddddd] &= ~(1 << sss);
+}
+
+void
 instr_call(struct instr_decode_common *idc)
 {
 	uint32_t addr, pc2;
