@@ -3,7 +3,6 @@
 #include <check.h>
 
 #define	PC_START		0
-#define	ck_assert_flags(flags)	_ck_assert_flags(__LINE__, flags)
 
 /* Make it harder to forget to add tests to suite. */
 #pragma GCC diagnostic error "-Wunused-function"
@@ -258,6 +257,39 @@ START_TEST(test_call22)
 }
 END_TEST
 
+START_TEST(test_mul)
+{
+	uint16_t code[] = {
+		0x9c00 | 0x3fe,		/* mul r31,r30 */
+		0x9c00 | 0x001,		/* mul r0, r1 */
+		0x9c00 | 0x045,		/* mul r4, r5 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0xff;
+	memory[30] = 0xff;
+	memory[4] = 0x15;
+	memory[SREG] = sreg_start = 0xff & ~(SREG_Z | SREG_C);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memword(0), 0xff * 0xff);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memword(0), 0xfe * 0x01);
+	ck_assert_uint_eq(memory[SREG], sreg_start);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memword(0), 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -290,6 +322,11 @@ suite_instr(void)
 	t = tcase_create("22-bit pc");
 	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
 	tcase_add_test(t, test_call22);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("math");
+	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
+	tcase_add_test(t, test_mul);
 	suite_add_tcase(s, t);
 
 	return s;

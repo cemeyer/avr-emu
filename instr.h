@@ -32,6 +32,7 @@ void instr_call(struct instr_decode_common *);
 void instr_in(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);
 void instr_movw(struct instr_decode_common *);
+void instr_mul(struct instr_decode_common *);
 void instr_nop(struct instr_decode_common *);
 void instr_or(struct instr_decode_common *);
 void instr_ori(struct instr_decode_common *);

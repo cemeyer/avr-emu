@@ -73,6 +73,25 @@ instr_movw(struct instr_decode_common *idc)
 }
 
 void
+instr_mul(struct instr_decode_common *idc)
+{
+	uint16_t res;
+
+	res = (uint16_t)memory[idc->ddddd] * (uint16_t)memory[idc->rrrrr];
+	memwriteword(0, res);
+
+	if ((res & 0x8000) != 0)
+		idc->setflags |= SREG_C;
+	else
+		idc->clrflags |= SREG_C;
+
+	if (res == 0)
+		idc->setflags |= SREG_Z;
+	else
+		idc->clrflags |= SREG_Z;
+}
+
+void
 instr_nop(struct instr_decode_common *idc __unused)
 {
 }
