@@ -36,6 +36,7 @@ void instr_asr(struct instr_decode_common *);
 void instr_bclrset(struct instr_decode_common *);
 void instr_bld(struct instr_decode_common *);
 void instr_brb(struct instr_decode_common *);
+void instr_bst(struct instr_decode_common *);
 void instr_call(struct instr_decode_common *);
 void instr_in(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);

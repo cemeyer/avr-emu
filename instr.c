@@ -254,6 +254,18 @@ instr_brb(struct instr_decode_common *idc)
 }
 
 void
+instr_bst(struct instr_decode_common *idc)
+{
+	uint8_t sss;
+
+	sss = idc->rrrrr - 16;
+	if ((memory[idc->ddddd] & (1 << sss)) != 0)
+		idc->setflags |= SREG_T;
+	else
+		idc->clrflags |= SREG_T;
+}
+
+void
 instr_call(struct instr_decode_common *idc)
 {
 	uint32_t addr, pc2;
