@@ -31,13 +31,81 @@ GHashTable	*input_record;			// insns -> inprec
 
 // Could easily sort by popularity over time.
 static struct instr_decode avr_instr[] = {
-	{ 0xb000, 0xf800, instr_in, .ddddd84 = true },
-	{ 0x2c00, 0xfc00, instr_mov, .ddddd84 = true, .rrrrr9_30 = true },
-	{ 0x0100, 0xff00, instr_movw, .dddd74 = true, .rrrr30 = true },
 	{ 0x0000, 0xffff, instr_nop },
+	{ 0x0100, 0xff00, instr_movw, .dddd74 = true, .rrrr30 = true },
+	{ 0x0200, 0xff00, instr_unimp/*MULS*/, .dddd74 = true, .rrrr30 = true },
+	{ 0x0300, 0xff88, instr_unimp/*MULSU*/, .ddd64 = true, .rrr20 = true },
+	{ 0x0308, 0xff88, instr_unimp/*FMUL*/, .ddd64 = true, .rrr20 = true },
+	{ 0x0380, 0xff80, instr_unimp/*FMULS(U)*/, .ddd64 = true, .rrr20 = true },
+	{ 0x0400, 0xec00, instr_unimp/*CP(C)*/, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x0800, 0xec00, instr_unimp/*SUB(C)*/, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x0c00, 0xec00, instr_unimp/*ADD(C)*/, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x1000, 0xfc00, instr_unimp/*CPSE*/, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x2000, 0xfc00, instr_unimp/*TST*/, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x2400, 0xfc00, instr_unimp/*EOR(XOR)*/, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x2800, 0xfc00, instr_or, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x2c00, 0xfc00, instr_mov, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x3000, 0xf000, instr_unimp/*CPI*/, .dddd74 = true, .KKKK118_30 = true },
+	{ 0x4000, 0xe000, instr_unimp/*SUBI(C)*/, .dddd74 = true, .KKKK118_30 = true },
 	{ 0x6000, 0xf000, instr_ori, .dddd74 = true, .KKKK118_30 = true },
+	{ 0x7000, 0xf000, instr_unimp/*ANDI/CBR*/, .dddd74 = true, .KKKK118_30 = true },
+	{ 0x8000, 0xd200, instr_unimp/*LDD*/, .ddddd84 = true },
+	{ 0x8200, 0xd200, instr_unimp/*STD*/, .ddddd84 = true },
+	{ 0x9000, 0xfe0f, instr_unimp/*LDS*/, .ddddd84 = true, .imm16 = true },
+	{ 0x9001, 0xfe07, instr_unimp/*LD Y+/Z+*/, .ddddd84 = true },
+	{ 0x9002, 0xfe07, instr_unimp/*LD -Y/-Z*/, .ddddd84 = true },
+	{ 0x9004, 0xfe0c, instr_unimp/*(E)LPM Z(+)*/, .ddddd84 = true },
+	{ 0x900c, 0xfe0f, instr_unimp/*LD X*/, .ddddd84 = true },
+	{ 0x900d, 0xfe0f, instr_unimp/*LD X+*/, .ddddd84 = true },
+	{ 0x900e, 0xfe0f, instr_unimp/*LD -X*/, .ddddd84 = true },
+	{ 0x900f, 0xfe0f, instr_unimp/*POP*/, .ddddd84 = true },
+	{ 0x9200, 0xfe0f, instr_unimp/*STS*/, .ddddd84 = true, .imm16 = true },
+	{ 0x9201, 0xfe07, instr_unimp/*ST Y+/Z+*/, .ddddd84 = true },
+	{ 0x9202, 0xfe07, instr_unimp/*LD -Y/-Z*/, .ddddd84 = true },
+	{ 0x9204, 0xfe0f, instr_unimp/*XCH*/, .ddddd84 = true },
+	{ 0x9205, 0xfe0f, instr_unimp/*LAS*/, .ddddd84 = true },
+	{ 0x9206, 0xfe0f, instr_unimp/*LAC*/, .ddddd84 = true },
+	{ 0x9207, 0xfe0f, instr_unimp/*LAT*/, .ddddd84 = true },
+	{ 0x920c, 0xfe0f, instr_unimp/*ST X*/, .ddddd84 = true },
+	{ 0x920d, 0xfe0f, instr_unimp/*ST X+*/, .ddddd84 = true },
+	{ 0x920e, 0xfe0f, instr_unimp/*ST -X*/, .ddddd84 = true },
+	{ 0x920f, 0xfe0f, instr_unimp/*PUSH*/, .ddddd84 = true },
+	{ 0x9400, 0xfe0f, instr_unimp/*COM*/, .ddddd84 = true },
+	{ 0x9401, 0xfe0f, instr_unimp/*NEG*/, .ddddd84 = true },
+	{ 0x9402, 0xfe0f, instr_unimp/*SWAP*/, .ddddd84 = true },
+	{ 0x9403, 0xfe0f, instr_unimp/*INC*/, .ddddd84 = true },
+	{ 0x9405, 0xfe0f, instr_unimp/*ASR*/, .ddddd84 = true },
+	{ 0x9406, 0xfe0f, instr_unimp/*LSR*/, .ddddd84 = true },
+	{ 0x9407, 0xfe0f, instr_unimp/*ROR*/, .ddddd84 = true },
+	{ 0x9408, 0xff0f, instr_unimp/*SEx/CLx*/, .ddd64 = true },
+	{ 0x9409, 0xffef, instr_unimp/*(E)IJUMP Z*/ },
+	{ 0x940a, 0xfe0f, instr_unimp/*DEC*/, .ddddd84 = true },
+	{ 0x940b, 0xff0f, instr_unimp/*DES(k)*/, .dddd74 = true },
+	{ 0x940c, 0xfe0e, instr_unimp/*JMP abs22*/, .imm16 = true },
+	{ 0x940e, 0xfe0e, instr_unimp/*CALL abs22*/, .imm16 = true },
+	{ 0x9508, 0xffff, instr_unimp/*RET*/ },
+	{ 0x9509, 0xffef, instr_unimp/*(E)ICALL Z*/ },
+	{ 0x9518, 0xffff, instr_unimp/*RETI*/ },
+	{ 0x9588, 0xffff, instr_unimp/*SLEEP*/ },
+	{ 0x9598, 0xffff, instr_unimp/*BREAK*/ },
+	{ 0x95c8, 0xffef, instr_unimp/*(E)LPM*/ },
+	{ 0x95e8, 0xffff, instr_unimp/*SPM*/ },
+	{ 0x95f8, 0xffff, instr_unimp/*SPM Z+*/ },
+	{ 0x9600, 0xff00, instr_unimp/*ADIW*/ },
+	{ 0x9700, 0xff00, instr_unimp/*SBIW*/ },
+	{ 0x9800, 0xfd00, instr_unimp/*CBI/SBI*/, .rrr20 = true },
+	{ 0x9900, 0xfd00, instr_unimp/*SBIC/SBIS*/, .rrr20 = true },
+	{ 0x9900, 0xfd00, instr_unimp/*SBIC/SBIS*/, .rrr20 = true },
+	{ 0x9c00, 0xfc00, instr_unimp/*MUL*/, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0xb000, 0xf800, instr_in, .ddddd84 = true },
 	{ 0xb800, 0xf800, instr_out, .ddddd84 = true },
+	{ 0xc000, 0xf000, instr_unimp/*RJUMP*/ },
+	{ 0xd000, 0xf000, instr_unimp/*RCALL*/ },
+	{ 0xe000, 0xf000, instr_unimp/*LDI*/, .dddd74 = true, .KKKK118_30 = true },
+	{ 0xf000, 0xf800, instr_unimp/*BRANCH*/, .rrr20 = true },
+	{ 0xf800, 0xfe08, instr_unimp/*BLD*/, .ddddd84 = true, .rrr20 = true },
+	{ 0xfa00, 0xfe08, instr_unimp/*BST*/, .ddddd84 = true, .rrr20 = true },
+	{ 0xfc00, 0xfc08, instr_unimp/*SBRC/SBRS*/, .ddddd84 = true, .rrr20 = true },
 };
 
 void
@@ -193,14 +261,23 @@ emulate1(void)
 		idc.ddddd = bits(instr, 8, 4) >> 4;
 	if (avr_instr[i].dddd74)
 		idc.ddddd = 16 + (bits(instr, 7, 4) >> 4);
+	if (avr_instr[i].ddd64)
+		idc.ddddd = 16 + (bits(instr, 6, 4) >> 4);
 
 	if (avr_instr[i].rrrrr9_30)
 		idc.rrrrr = (bits(instr, 9, 9) >> 5) | bits(instr, 3, 0);
 	if (avr_instr[i].rrrr30)
 		idc.rrrrr = 16 + bits(instr, 3, 0);
+	if (avr_instr[i].rrr20)
+		idc.ddddd = 16 + bits(instr, 2, 0);
 
 	if (avr_instr[i].KKKK118_30)
 		idc.imm_u8 = (bits(instr, 11, 8) >> 4) | bits(instr, 3, 0);
+
+	if (avr_instr[i].imm16) {
+		idc.imm_u16 = romword(pc + 1);
+		instr_size++;
+	}
 
 	avr_instr[i].code(&idc);
 

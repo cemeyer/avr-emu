@@ -73,3 +73,10 @@ instr_out(struct instr_decode_common *idc)
 	io_port = (bits(idc->instr, 10, 9) >> 5) | bits(idc->instr, 3, 0);
 	memory[IO_BASE + io_port] = memory[idc->ddddd];
 }
+
+void
+instr_unimp(struct instr_decode_common *idc __unused)
+{
+
+	unhandled(idc->instr);
+}
