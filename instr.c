@@ -399,6 +399,21 @@ instr_cpse(struct instr_decode_common *idc)
 }
 
 void
+instr_dec(struct instr_decode_common *idc)
+{
+	uint8_t rd, res;
+
+	res = memory[idc->ddddd] - 1;
+	memory[idc->ddddd] = res;
+
+	logic_flags8(res, &idc->setflags, &idc->clrflags);
+	if (res == 0x7f) {
+		idc->clrflags &= ~(SREG_V | SREG_S);
+		idc->setflags |= (SREG_V | SREG_S);
+	}
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;

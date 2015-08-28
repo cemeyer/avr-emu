@@ -86,7 +86,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0x9407, 0xfe0f, instr_unimp/*ROR*/, .ddddd84 = true },
 	{ 0x9408, 0xff0f, instr_bclrset, .ddd64 = true },
 	{ 0x9409, 0xffef, instr_unimp/*(E)IJUMP Z*/ },
-	{ 0x940a, 0xfe0f, instr_unimp/*DEC*/, .ddddd84 = true },
+	{ 0x940a, 0xfe0f, instr_dec, .ddddd84 = true },
 	{ 0x940b, 0xff0f, instr_unimp/*DES(k)*/, .dddd74 = true },
 	{ 0x940c, 0xfe0e, instr_unimp/*JMP abs22*/, .imm16 = true },
 	{ 0x940e, 0xfe0e, instr_call, .imm16 = true },
@@ -301,6 +301,10 @@ restart:
 
 	avr_instr[i].code(&idc);
 
+#ifndef	REALLYFAST
+	ASSERT((idc.clrflags & idc.setflags) == 0, "overlapped flags: 0x%02x",
+	    (unsigned)(idc.clrflags & idc.setflags));
+#endif
 	memory[SREG] &= ~idc.clrflags;
 	memory[SREG] |= idc.setflags;
 
