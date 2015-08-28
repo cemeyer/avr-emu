@@ -13,6 +13,7 @@ struct inprec {
 uint32_t	 pc,
 		 pc_start,
 		 instr_size;
+bool		 skip_next_instruction;
 /* 24 bits are addressable in both Data and Program regions */
 uint8_t		 memory[0x1000000];
 /* Program memory is word-addressed */
@@ -46,7 +47,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0x0400, 0xec00, instr_cpc, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x0800, 0xec00, instr_unimp/*SUB(C)*/, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x0c00, 0xec00, instr_adc, .ddddd84 = true, .rrrrr9_30 = true },
-	{ 0x1000, 0xfc00, instr_unimp/*CPSE*/, .ddddd84 = true, .rrrrr9_30 = true },
+	{ 0x1000, 0xfc00, instr_cpse, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x2000, 0xfc00, instr_and, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x2400, 0xfc00, instr_unimp/*EOR(XOR)*/, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x2800, 0xfc00, instr_or, .ddddd84 = true, .rrrrr9_30 = true },
@@ -133,6 +134,7 @@ init(void)
 	pc22 = false;
 	insns = 0;
 	off = false;
+	skip_next_instruction = false;
 	start = now();
 	//memset(memory, 0, sizeof(memory));
 }
@@ -249,6 +251,7 @@ emulate1(void)
 	uint16_t instr;
 	size_t i;
 
+restart:
 	pc_start = pc;
 	instr_size = 1;
 
@@ -263,6 +266,21 @@ emulate1(void)
 
 	memset(&idc, 0, sizeof(idc));
 	idc.instr = instr;
+
+	if (avr_instr[i].imm16) {
+		idc.imm_u16 = romword(pc + 1);
+		instr_size++;
+	}
+
+	/*
+	 * After our CPSE, we've done enough decoding to figure out if this is
+	 * a 16-bit or 32-bit instruction.
+	 */
+	if (skip_next_instruction) {
+		skip_next_instruction = false;
+		pc += instr_size;
+		return;
+	}
 
 	if (avr_instr[i].ddddd84)
 		idc.ddddd = bits(instr, 8, 4) >> 4;
@@ -280,11 +298,6 @@ emulate1(void)
 
 	if (avr_instr[i].KKKK118_30)
 		idc.imm_u8 = (bits(instr, 11, 8) >> 4) | bits(instr, 3, 0);
-
-	if (avr_instr[i].imm16) {
-		idc.imm_u16 = romword(pc + 1);
-		instr_size++;
-	}
 
 	avr_instr[i].code(&idc);
 
@@ -314,6 +327,13 @@ emulate1(void)
 	}
 
 	insns++;
+
+	/*
+	 * We need to do instruction decode on the *next* instruction to figure
+	 * out where PC should be after *this* instruction.
+	 */
+	if (skip_next_instruction)
+		goto restart;
 }
 
 static void

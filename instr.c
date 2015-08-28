@@ -391,6 +391,14 @@ instr_cpi(struct instr_decode_common *idc)
 }
 
 void
+instr_cpse(struct instr_decode_common *idc)
+{
+
+	if (memory[idc->ddddd] == memory[idc->rrrrr])
+		skip_next_instruction = true;
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;

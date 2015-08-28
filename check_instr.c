@@ -772,6 +772,45 @@ START_TEST(test_cpi)
 }
 END_TEST
 
+START_TEST(test_cpse)
+{
+	uint16_t code[] = {
+		0x1000 | 0x01,		/* cpse r0, r1 */
+		0x1000 | 0x02,		/* cpse r0, r2 */
+		0x940e | /*kkkkk_k*/ 0x1f1,	/* call 0x3fbeef */
+		0xbeef,
+		0x1000 | 0x02,		/* cpse r0, r2 */
+		0,			/* nop */
+		0,			/* nop */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[1] = 1;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[0], 0);
+	ck_assert_uint_eq(insns, 1);
+
+	emulate1();
+	/* Skips both words of 32-bit CALL imm16 */
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memory[0], 0);
+	ck_assert_uint_eq(insns, 2);
+
+	emulate1();
+	/* Skips only one word of NOP */
+	ck_assert_uint_eq(pc, PC_START + 6);
+	ck_assert_uint_eq(insns, 3);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 7);
+	ck_assert_uint_eq(insns, 4);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -834,6 +873,7 @@ suite_instr(void)
 	t = tcase_create("branches");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_brb);
+	tcase_add_test(t, test_cpse);
 	suite_add_tcase(s, t);
 
 	return s;
