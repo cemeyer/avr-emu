@@ -51,7 +51,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0x2400, 0xfc00, instr_unimp/*EOR(XOR)*/, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x2800, 0xfc00, instr_or, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x2c00, 0xfc00, instr_mov, .ddddd84 = true, .rrrrr9_30 = true },
-	{ 0x3000, 0xf000, instr_unimp/*CPI*/, .dddd74 = true, .KKKK118_30 = true },
+	{ 0x3000, 0xf000, instr_cpi, .dddd74 = true, .KKKK118_30 = true },
 	{ 0x4000, 0xe000, instr_unimp/*SUBI(C)*/, .dddd74 = true, .KKKK118_30 = true },
 	{ 0x6000, 0xf000, instr_ori, .dddd74 = true, .KKKK118_30 = true },
 	{ 0x7000, 0xf000, instr_andi, .dddd74 = true, .KKKK118_30 = true },

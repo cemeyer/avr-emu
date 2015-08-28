@@ -380,6 +380,17 @@ instr_cpc(struct instr_decode_common *idc)
 }
 
 void
+instr_cpi(struct instr_decode_common *idc)
+{
+	uint8_t rd, res;
+
+	rd = memory[idc->ddddd];
+	res = rd - idc->imm_u8;
+
+	sub_flags8(res, rd, idc->imm_u8, &idc->setflags, &idc->clrflags);
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;

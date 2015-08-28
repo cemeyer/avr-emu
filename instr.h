@@ -41,6 +41,7 @@ void instr_call(struct instr_decode_common *);
 void instr_cbisbi(struct instr_decode_common *);
 void instr_com(struct instr_decode_common *);
 void instr_cpc(struct instr_decode_common *);
+void instr_cpi(struct instr_decode_common *);
 void instr_in(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);
 void instr_movw(struct instr_decode_common *);
