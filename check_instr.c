@@ -924,6 +924,29 @@ START_TEST(test_ijump)
 }
 END_TEST
 
+START_TEST(test_elpm)
+{
+	uint16_t code[] = {
+		0x95c8,		/* lpm */
+		0x95d8,		/* elpm */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	memwriteword(30 /* Z */, 0);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[0], 0xc8);
+
+	memory[RAMPZ] = 1;
+	install_words(&code[1], 0x10000 / 2, sizeof(code[1]));
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[0], 0xd8);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -953,6 +976,7 @@ suite_instr(void)
 	tcase_add_test(t, test_ori);
 	tcase_add_test(t, test_out);
 	tcase_add_test(t, test_push);
+	tcase_add_test(t, test_elpm);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("regpairs");

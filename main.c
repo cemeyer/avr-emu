@@ -94,7 +94,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0x9518, 0xffff, instr_unimp/*RETI*/ },
 	{ 0x9588, 0xffff, instr_unimp/*SLEEP*/ },
 	{ 0x9598, 0xffff, instr_unimp/*BREAK*/ },
-	{ 0x95c8, 0xffef, instr_unimp/*(E)LPM*/ },
+	{ 0x95c8, 0xffef, instr_elpm },
 	{ 0x95e8, 0xffff, instr_unimp/*SPM*/ },
 	{ 0x95f8, 0xffff, instr_unimp/*SPM Z+*/ },
 	{ 0x9600, 0xff00, instr_adiw },

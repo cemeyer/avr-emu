@@ -440,6 +440,26 @@ instr_eicalljump(struct instr_decode_common *idc)
 }
 
 void
+instr_elpm(struct instr_decode_common *idc)
+{
+	uint32_t addr;
+	uint16_t word;
+	bool ext;
+
+	ext = bits(idc->instr, 4, 4);
+	addr = memword(REGP_Z);
+
+	if (ext)
+		addr |= ((uint32_t)memory[RAMPZ] << 16);
+
+	word = romword(addr >> 1);
+	if ((addr & 1) != 0)
+		memory[0] = (word >> 8);
+	else
+		memory[0] = (word & 0xff);
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;
