@@ -460,6 +460,40 @@ instr_elpm(struct instr_decode_common *idc)
 }
 
 void
+instr_elpmz(struct instr_decode_common *idc)
+{
+	uint32_t addr;
+	uint16_t word;
+	bool ext, postinc;
+
+	ext = bits(idc->instr, 1, 1);
+	postinc = bits(idc->instr, 0, 0);
+
+	if (postinc && (idc->ddddd == 30 || idc->ddddd == 31)) {
+		printf("%s: ELPM r30, Z+ and ELPM r31, Z+ are documented as "
+		    "undefined in the AVR Instruction set manual.\n",
+		    __func__);
+		illins(idc->instr);
+	}
+
+	addr = memword(REGP_Z);
+	if (ext)
+		addr |= ((uint32_t)memory[RAMPZ] << 16);
+
+	word = romword(addr >> 1);
+	if ((addr & 1) != 0)
+		memory[idc->ddddd] = (word >> 8);
+	else
+		memory[idc->ddddd] = (word & 0xff);
+
+	if (postinc) {
+		addr++;
+		memwriteword(REGP_Z, addr & 0xffff);
+		memory[RAMPZ] = (addr >> 16);
+	}
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;

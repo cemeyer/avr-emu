@@ -853,7 +853,7 @@ START_TEST(test_eicall22)
 	install_words(code, PC_START, sizeof(code));
 	setsp(0xffff);
 
-	memwriteword(30 /* Z */, PC_START + 1);
+	memwriteword(REGP_Z, PC_START + 1);
 
 	emulate1();
 	ck_assert_uint_eq(getsp(), 0xfffc);
@@ -863,7 +863,7 @@ START_TEST(test_eicall22)
 	ck_assert_uint_eq(pc, PC_START + 1);
 
 	memory[EIND] = 0x5;
-	memwriteword(30 /* Z */, 0);
+	memwriteword(REGP_Z, 0);
 	emulate1();
 	ck_assert_uint_eq(getsp(), 0xfff9);
 	ck_assert_uint_eq(memory[0xfffc], (PC_START + 2) & 0xff);
@@ -881,7 +881,7 @@ START_TEST(test_icall)
 
 	install_words(code, PC_START, sizeof(code));
 	setsp(0xffff);
-	memwriteword(30 /* Z */, 0xffee);
+	memwriteword(REGP_Z, 0xffee);
 
 	emulate1();
 	ck_assert_uint_eq(getsp(), 0xfffd);
@@ -901,7 +901,7 @@ START_TEST(test_eijump22)
 	setsp(0xffff);
 
 	memory[EIND] = 0x5;
-	memwriteword(30 /* Z */, 0x1234);
+	memwriteword(REGP_Z, 0x1234);
 	emulate1();
 	ck_assert_uint_eq(getsp(), 0xffff);
 	ck_assert_uint_eq(pc, 0x51234);
@@ -916,7 +916,7 @@ START_TEST(test_ijump)
 
 	install_words(code, PC_START, sizeof(code));
 	setsp(0xffff);
-	memwriteword(30 /* Z */, 0xffee);
+	memwriteword(REGP_Z, 0xffee);
 
 	emulate1();
 	ck_assert_uint_eq(getsp(), 0xffff);
@@ -929,14 +929,20 @@ START_TEST(test_elpm)
 	uint16_t code[] = {
 		0x95c8,		/* lpm */
 		0x95d8,		/* elpm */
+		/* Z is r31:r30, so don't trash it: */
+		0x9004 | 0x1d0,		/* lpm r29, Z */
+		0x9006 | 0x1d0,		/* elpm r29, Z */
+		0x9005 | 0x1d0,		/* lpm r29, Z+ */
+		0x9007 | 0x1d0,		/* elpm r29, Z+ */
 	};
 
 	install_words(code, PC_START, sizeof(code));
-	memwriteword(30 /* Z */, 0);
+	memwriteword(REGP_Z, 0);
 
 	emulate1();
 	ck_assert_uint_eq(pc, PC_START + 1);
 	ck_assert_uint_eq(memory[0], 0xc8);
+	ck_assert_uint_eq(memword(REGP_Z), 0);
 
 	memory[RAMPZ] = 1;
 	install_words(&code[1], 0x10000 / 2, sizeof(code[1]));
@@ -944,6 +950,35 @@ START_TEST(test_elpm)
 	emulate1();
 	ck_assert_uint_eq(pc, PC_START + 2);
 	ck_assert_uint_eq(memory[0], 0xd8);
+
+	memwriteword(REGP_Z, 4);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[29], 0xd4);
+	ck_assert_uint_eq(memword(REGP_Z), 4);
+
+	memory[RAMPZ] = 0;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memory[29], 0xd4);
+
+	memory[RAMPZ] = 0x3f;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 5);
+	ck_assert_uint_eq(memory[29], 0xd4);
+	ck_assert_uint_eq(memword(REGP_Z), 0x5);
+
+	memory[RAMPZ] = 0x3e;
+	memwriteword(REGP_Z, 0xffff);
+	memset(&flash[0x3efffe / 2], 0xb5, sizeof(flash[0]));
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 6);
+	ck_assert_uint_eq(memory[29], 0xb5);
+	ck_assert_uint_eq(memword(REGP_Z), 0);
+	/* Not 100% sure RAMPZ:Z is actually treated as a 24-bit idx: */
+	ck_assert_uint_eq(memory[RAMPZ], 0x3f);
+
+	memset(&flash[0x3efffe / 2], 0, sizeof(flash[0]));
 }
 END_TEST
 

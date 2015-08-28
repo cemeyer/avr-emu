@@ -46,6 +46,7 @@ void instr_cpse(struct instr_decode_common *);
 void instr_dec(struct instr_decode_common *);
 void instr_eicalljump(struct instr_decode_common *);
 void instr_elpm(struct instr_decode_common *);
+void instr_elpmz(struct instr_decode_common *);
 void instr_in(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);
 void instr_movw(struct instr_decode_common *);

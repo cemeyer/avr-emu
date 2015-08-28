@@ -61,7 +61,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0x9000, 0xfe0f, instr_unimp/*LDS*/, .ddddd84 = true, .imm16 = true },
 	{ 0x9001, 0xfe07, instr_unimp/*LD Y+/Z+*/, .ddddd84 = true },
 	{ 0x9002, 0xfe07, instr_unimp/*LD -Y/-Z*/, .ddddd84 = true },
-	{ 0x9004, 0xfe0c, instr_unimp/*(E)LPM Z(+)*/, .ddddd84 = true },
+	{ 0x9004, 0xfe0c, instr_elpmz, .ddddd84 = true },
 	{ 0x900c, 0xfe0f, instr_unimp/*LD X*/, .ddddd84 = true },
 	{ 0x900d, 0xfe0f, instr_unimp/*LD X+*/, .ddddd84 = true },
 	{ 0x900e, 0xfe0f, instr_unimp/*LD -X*/, .ddddd84 = true },
