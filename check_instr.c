@@ -853,6 +853,7 @@ START_TEST(test_eicall22)
 	install_words(code, PC_START, sizeof(code));
 	setsp(0xffff);
 
+	memory[EIND] = 0x3f;
 	memwriteword(REGP_Z, PC_START + 1);
 
 	emulate1();
@@ -894,11 +895,18 @@ END_TEST
 START_TEST(test_eijump22)
 {
 	uint16_t code[] = {
+		0x9409,		/* ijump */
 		0x9419,		/* eijump */
 	};
 
 	install_words(code, PC_START, sizeof(code));
 	setsp(0xffff);
+
+	memory[EIND] = 0x3f;
+	memwriteword(REGP_Z, PC_START + 1);
+	emulate1();
+	ck_assert_uint_eq(getsp(), 0xffff);
+	ck_assert_uint_eq(pc, PC_START + 1);
 
 	memory[EIND] = 0x5;
 	memwriteword(REGP_Z, 0x1234);
