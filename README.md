@@ -1,5 +1,5 @@
-avr-emu [![Build Status](https://travis-ci.org/cemeyer/avr-emu.png?branch=master)](https://travis-ci.org/cemeyer/avr-emu)
-===================
+avr-emu
+=======
 
 This is an AVR emulator. It is a work in progress, and is not expected to be
 very good.

@@ -1,9 +1,0 @@
-language: c
-compiler:
-    - clang
-    - gcc
-before_install:
-    - sudo apt-get -y install check
-script:
-    - make NEWGCCFLAGS= LDFLAGS=-lrt
-    - make NEWGCCFLAGS= LDFLAGS=-lrt checkrun
