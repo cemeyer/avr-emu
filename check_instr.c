@@ -843,6 +843,54 @@ START_TEST(test_dec)
 }
 END_TEST
 
+START_TEST(test_eicall22)
+{
+	uint16_t code[] = {
+		0x9509,		/* icall */
+		0x9519,		/* eicall */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	memwriteword(30 /* Z */, PC_START + 1);
+
+	emulate1();
+	ck_assert_uint_eq(getsp(), 0xfffc);
+	ck_assert_uint_eq(memory[0xffff], (PC_START + 1) & 0xff);
+	ck_assert_uint_eq(memory[0xfffe], ((PC_START + 1) >> 8) & 0xff);
+	ck_assert_uint_eq(memory[0xfffd], (PC_START + 1) >> 16);
+	ck_assert_uint_eq(pc, PC_START + 1);
+
+	memory[EIND] = 0x5;
+	memwriteword(30 /* Z */, 0);
+	emulate1();
+	ck_assert_uint_eq(getsp(), 0xfff9);
+	ck_assert_uint_eq(memory[0xfffc], (PC_START + 2) & 0xff);
+	ck_assert_uint_eq(memory[0xfffb], ((PC_START + 2) >> 8) & 0xff);
+	ck_assert_uint_eq(memory[0xfffa], (PC_START + 2) >> 16);
+	ck_assert_uint_eq(pc, 0x50000);
+}
+END_TEST
+
+START_TEST(test_icall)
+{
+	uint16_t code[] = {
+		0x9509,		/* icall */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+	memwriteword(30 /* Z */, 0xffee);
+
+	emulate1();
+	ck_assert_uint_eq(getsp(), 0xfffd);
+	ck_assert_uint_eq(memory[0xffff], (PC_START + 1) & 0xff);
+	ck_assert_uint_eq(memory[0xfffe], (PC_START + 1) >> 8);
+	ck_assert_uint_eq(pc, 0xffee);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -882,6 +930,7 @@ suite_instr(void)
 	t = tcase_create("22-bit pc");
 	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
 	tcase_add_test(t, test_call22);
+	tcase_add_test(t, test_eicall22);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("math");
@@ -907,6 +956,7 @@ suite_instr(void)
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_brb);
 	tcase_add_test(t, test_cpse);
+	tcase_add_test(t, test_icall);
 	suite_add_tcase(s, t);
 
 	return s;

@@ -42,6 +42,11 @@ typedef unsigned int uns;
 	abort_nodump();							\
 } while (0)
 
+/* Register pairs */
+#define	REGP_Z		30
+#define	REGP_Y		28
+#define	REGP_X		26
+
 /* SREG is accessible in data memory as an IO port */
 #define	SREG		0x5F
 #define	SP_HI		0x5E

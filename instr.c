@@ -414,6 +414,29 @@ instr_dec(struct instr_decode_common *idc)
 }
 
 void
+instr_eicall(struct instr_decode_common *idc)
+{
+	uint32_t pc2, addr;
+	bool ext;
+
+	addr = memword(REGP_Z);
+	ext = bits(idc->instr, 4, 4);
+
+	if (ext && pc22)
+		addr |= ((uint32_t)memory[EIND] << 16);
+	else if (ext)
+		illins(idc->instr);
+
+	pc2 = pc_start + 1;
+	pushbyte(pc2 & 0xff);
+	pushbyte((pc2 >> 8) & 0xff);
+	if (pc22)
+		pushbyte(pc2 >> 16);
+
+	pc = addr - instr_size;
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;
