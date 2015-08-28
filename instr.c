@@ -135,6 +135,44 @@ adiw_flags16(uint16_t res, uint16_t rd, uint8_t *set, uint8_t *clr)
 }
 
 static inline void
+sub_flags8(uint8_t res, uint8_t rd, uint8_t rr, uint8_t *set, uint8_t *clr)
+{
+
+	if (res & 0x80)
+		*set |= SREG_N;
+	else
+		*clr |= SREG_N;
+	if ((0x80 & rd & ~rr & ~res) ||
+	    (0x80 & ~rd & rr & res))
+		*set |= SREG_V;
+	else
+		*clr |= SREG_V;
+	if (((*set & SREG_N) && (*clr & SREG_V)) ||
+	    ((*clr & SREG_N) && (*set & SREG_V)))
+		*set |= SREG_S;
+	else
+		*clr |= SREG_S;
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+
+	if ((0x80 & ~rd & rr) ||
+	    (0x80 & rr & res) ||
+	    (0x80 & res & ~rd))
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+	if ((0x08 & ~rd & rr) ||
+	    (0x08 & rr & res) ||
+	    (0x08 & res & ~rd))
+		*set |= SREG_H;
+	else
+		*clr |= SREG_H;
+}
+
+static inline void
 pushbyte(uint8_t b)
 {
 	uint16_t sp;
@@ -321,6 +359,24 @@ instr_com(struct instr_decode_common *idc)
 		*set |= (SREG_N | SREG_S);
 	else
 		*clr |= (SREG_N | SREG_S);
+}
+
+void
+instr_cpc(struct instr_decode_common *idc)
+{
+	bool carry_mode;
+	uint8_t rr, rd, res;
+
+	carry_mode = (bits(idc->instr, 12, 12) == 0);
+
+	rr = memory[idc->rrrrr];
+	rd = memory[idc->ddddd];
+
+	res = rd - rr;
+	if (carry_mode && (memory[SREG] & SREG_C) != 0)
+		res -= 1;
+
+	sub_flags8(res, rd, rr, &idc->setflags, &idc->clrflags);
 }
 
 void
