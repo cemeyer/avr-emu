@@ -414,24 +414,27 @@ instr_dec(struct instr_decode_common *idc)
 }
 
 void
-instr_eicall(struct instr_decode_common *idc)
+instr_eicalljump(struct instr_decode_common *idc)
 {
 	uint32_t pc2, addr;
-	bool ext;
+	bool ext, call;
 
 	addr = memword(REGP_Z);
 	ext = bits(idc->instr, 4, 4);
+	call = bits(idc->instr, 8, 8);
 
 	if (ext && pc22)
 		addr |= ((uint32_t)memory[EIND] << 16);
 	else if (ext)
 		illins(idc->instr);
 
-	pc2 = pc_start + 1;
-	pushbyte(pc2 & 0xff);
-	pushbyte((pc2 >> 8) & 0xff);
-	if (pc22)
-		pushbyte(pc2 >> 16);
+	if (call) {
+		pc2 = pc_start + 1;
+		pushbyte(pc2 & 0xff);
+		pushbyte((pc2 >> 8) & 0xff);
+		if (pc22)
+			pushbyte(pc2 >> 16);
+	}
 
 	pc = addr - instr_size;
 }

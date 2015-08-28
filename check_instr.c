@@ -891,6 +891,39 @@ START_TEST(test_icall)
 }
 END_TEST
 
+START_TEST(test_eijump22)
+{
+	uint16_t code[] = {
+		0x9419,		/* eijump */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	memory[EIND] = 0x5;
+	memwriteword(30 /* Z */, 0x1234);
+	emulate1();
+	ck_assert_uint_eq(getsp(), 0xffff);
+	ck_assert_uint_eq(pc, 0x51234);
+}
+END_TEST
+
+START_TEST(test_ijump)
+{
+	uint16_t code[] = {
+		0x9409,		/* ijump */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+	memwriteword(30 /* Z */, 0xffee);
+
+	emulate1();
+	ck_assert_uint_eq(getsp(), 0xffff);
+	ck_assert_uint_eq(pc, 0xffee);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -931,6 +964,7 @@ suite_instr(void)
 	tcase_add_checked_fixture(t, setup_machine22, teardown_machine);
 	tcase_add_test(t, test_call22);
 	tcase_add_test(t, test_eicall22);
+	tcase_add_test(t, test_eijump22);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("math");
@@ -957,6 +991,7 @@ suite_instr(void)
 	tcase_add_test(t, test_brb);
 	tcase_add_test(t, test_cpse);
 	tcase_add_test(t, test_icall);
+	tcase_add_test(t, test_ijump);
 	suite_add_tcase(s, t);
 
 	return s;
