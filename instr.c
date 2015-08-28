@@ -66,6 +66,22 @@ mul_flags16(uint16_t res, uint8_t *set, uint8_t *clr)
 }
 
 static inline void
+fmul_flags16(uint16_t res, uint8_t *set, uint8_t *clr)
+{
+
+	if ((res & 0x8000) != 0)
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+
+	res <<= 1;
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+}
+
+static inline void
 adc_flags8(uint8_t res, uint8_t rd, uint8_t rr, uint8_t *set, uint8_t *clr)
 {
 
@@ -496,27 +512,35 @@ instr_elpmz(struct instr_decode_common *idc)
 void
 instr_fmul(struct instr_decode_common *idc)
 {
-	uint8_t *set, *clr;
 	uint16_t res;
-
-	set = &idc->setflags;
-	clr = &idc->clrflags;
 
 	res = (uint16_t)memory[idc->ddddd] * (uint16_t)memory[idc->rrrrr];
 
-	/* Not quite the same as mul_flags16, beware. */
-	if ((res & 0x8000) != 0)
-		*set |= SREG_C;
-	else
-		*clr |= SREG_C;
+	fmul_flags16(res, &idc->setflags, &idc->clrflags);
 
 	res <<= 1;
 	memwriteword(0, res);
+}
 
-	if (res == 0)
-		*set |= SREG_Z;
-	else
-		*clr |= SREG_Z;
+void
+instr_fmulsu(struct instr_decode_common *idc)
+{
+	int16_t rd, rr;
+	uint16_t res;
+	bool su;
+
+	su = bits(idc->instr, 3, 3);
+	if (su)
+		illins(idc->instr); /* TODO */
+
+	rd = (int8_t)memory[idc->ddddd];
+	rr = (int8_t)memory[idc->rrrrr];
+	res = rd * rr;
+
+	fmul_flags16(res, &idc->setflags, &idc->clrflags);
+
+	res <<= 1;
+	memwriteword(0, res);
 }
 
 void
