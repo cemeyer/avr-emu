@@ -58,6 +58,7 @@ void instr_or(struct instr_decode_common *);
 void instr_ori(struct instr_decode_common *);
 void instr_out(struct instr_decode_common *);
 void instr_push(struct instr_decode_common *);
+void instr_xor(struct instr_decode_common *);
 
 void instr_unimp(struct instr_decode_common *);
 

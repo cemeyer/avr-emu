@@ -598,6 +598,14 @@ instr_push(struct instr_decode_common *idc)
 }
 
 void
+instr_xor(struct instr_decode_common *idc)
+{
+
+	memory[idc->ddddd] ^= memory[idc->rrrrr];
+	logic_flags8(memory[idc->ddddd], &idc->setflags, &idc->clrflags);
+}
+
+void
 instr_unimp(struct instr_decode_common *idc __unused)
 {
 

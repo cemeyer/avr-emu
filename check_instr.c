@@ -982,6 +982,45 @@ START_TEST(test_elpm)
 }
 END_TEST
 
+START_TEST(test_xor)
+{
+	uint16_t code[] = {
+		0x2400 | /*r_rrrr*/ 0x20f | /*ddddd*/ 0x1e0,	/* xor r30,r31 */
+		0x2400 | /*r_rrrr*/ 0x20d | /*ddddd*/ 0x050,	/* xor r5,r29 */
+		0x2400 | /*r_rrrr*/ 0x005 | /*ddddd*/ 0x000,	/* xor r0,r5 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0x0;
+	memory[30] = 0x0;
+
+	memory[29] = 0xaa;
+	memory[5] = 0x55;
+
+	memory[0] = 0xff;
+
+	sreg_start = SREG_I | SREG_T | SREG_H | SREG_C;
+	memory[SREG] = sreg_start | SREG_V;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[30], 0x0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[5], 0xff);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_N | SREG_S);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[0], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1012,6 +1051,7 @@ suite_instr(void)
 	tcase_add_test(t, test_out);
 	tcase_add_test(t, test_push);
 	tcase_add_test(t, test_elpm);
+	tcase_add_test(t, test_xor);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("regpairs");
