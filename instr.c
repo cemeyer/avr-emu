@@ -530,11 +530,12 @@ instr_fmulsu(struct instr_decode_common *idc)
 	bool su;
 
 	su = bits(idc->instr, 3, 3);
-	if (su)
-		illins(idc->instr); /* TODO */
 
 	rd = (int8_t)memory[idc->ddddd];
-	rr = (int8_t)memory[idc->rrrrr];
+	if (su)
+		rr = (uint8_t)memory[idc->rrrrr];
+	else
+		rr = (int8_t)memory[idc->rrrrr];
 	res = rd * rr;
 
 	fmul_flags16(res, &idc->setflags, &idc->clrflags);
