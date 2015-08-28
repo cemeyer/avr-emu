@@ -586,8 +586,9 @@ instr_jmp(struct instr_decode_common *idc)
 	pc = addr - instr_size;
 }
 
-void
-instr_ldx(struct instr_decode_common *idc)
+static inline void
+instr_ld_common(uint8_t rp, uint8_t extaddr, const char *name,
+    struct instr_decode_common *idc)
 {
 	uint32_t addr;
 	bool predec, postinc;
@@ -604,16 +605,16 @@ instr_ldx(struct instr_decode_common *idc)
 		break;
 	}
 
-	if ((predec || postinc) && (idc->ddddd == 26 || idc->ddddd == 27)) {
-		printf("%s: LD r26, X+/- and LD r27, X+/- are documented as "
-		    "undefined in the AVR Instruction set manual.\n",
-		    __func__);
+	if ((predec || postinc) && (idc->ddddd == rp || idc->ddddd == rp + 1)) {
+		printf("%s: LD r%u, %s+/- and LD r%u, %s+/- are documented "
+		    "as undefined in the AVR Instruction set manual.\n",
+		    __func__, (uns)rp, name, (uns)rp + 1, name);
 		illins(idc->instr);
 	}
 
-	addr = memword(REGP_X);
+	addr = memword(rp);
 	if (!pc_mem_max_64k)
-		addr |= ((uint32_t)memory[RAMPX] << 16);
+		addr |= ((uint32_t)memory[extaddr] << 16);
 
 	if (predec)
 		addr = (addr - 1) & 0xffffff;
@@ -630,13 +631,33 @@ instr_ldx(struct instr_decode_common *idc)
 
 	if (postinc || predec) {
 		if (pc_mem_max_256b)
-			memory[REGP_X] = (addr & 0xff);
+			memory[rp] = (addr & 0xff);
 		else {
-			memwriteword(REGP_X, addr & 0xffff);
+			memwriteword(rp, addr & 0xffff);
 			if (!pc_mem_max_64k)
-				memory[RAMPX] = (addr >> 16);
+				memory[extaddr] = (addr >> 16);
 		}
 	}
+}
+
+void
+instr_ldx(struct instr_decode_common *idc)
+{
+
+	instr_ld_common(REGP_X, RAMPX, "X", idc);
+}
+
+void
+instr_ldyz(struct instr_decode_common *idc)
+{
+	bool Y;
+
+	Y = bits(idc->instr, 3, 3);
+
+	if (Y)
+		instr_ld_common(REGP_Y, RAMPY, "Y", idc);
+	else
+		instr_ld_common(REGP_Z, RAMPZ, "Z", idc);
 }
 
 void
