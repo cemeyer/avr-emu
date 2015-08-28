@@ -325,8 +325,10 @@ instr_call(struct instr_decode_common *idc)
 	uint32_t addr, pc2;
 
 	addr = idc->imm_u16;
-	addr |= (((uint32_t)
-		(bits(idc->instr, 8, 4) >> 3) | bits(idc->instr, 0, 0)) << 16);
+	if (pc22)
+		addr |= (((uint32_t)
+			(bits(idc->instr, 8, 4) >> 3) |
+			bits(idc->instr, 0, 0)) << 16);
 
 	pc2 = pc_start + 2;
 	pushbyte(pc2 & 0xff);
@@ -568,6 +570,20 @@ instr_inc(struct instr_decode_common *idc)
 		idc->setflags &= ~SREG_S;
 		idc->setflags |= SREG_V;
 	}
+}
+
+void
+instr_jmp(struct instr_decode_common *idc)
+{
+	uint32_t addr;
+
+	addr = idc->imm_u16;
+	if (pc22)
+		addr |= (((uint32_t)
+			(bits(idc->instr, 8, 4) >> 3) |
+			bits(idc->instr, 0, 0)) << 16);
+
+	pc = addr - instr_size;
 }
 
 void

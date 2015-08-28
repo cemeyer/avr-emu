@@ -223,7 +223,7 @@ END_TEST
 START_TEST(test_call)
 {
 	uint16_t code[] = {
-		0x940e /*kkkkk_k = 0*/,		/* call 0xdead */
+		0x940e | /*kkkkk_k*/ 0x1f1,	/* call 0x3fdead */
 		0xdead
 	};
 
@@ -1160,6 +1160,38 @@ START_TEST(test_inc)
 }
 END_TEST
 
+START_TEST(test_jmp)
+{
+	uint16_t code[] = {
+		0x940c | /*kkkkk_k*/ 0x1f1,	/* jmp 0x3fdead */
+		0xdead
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, 0xdead);
+	ck_assert_uint_eq(getsp(), 0xffff);
+}
+END_TEST
+
+START_TEST(test_jmp22)
+{
+	uint16_t code[] = {
+		0x940c | /*kkkkk_k*/ 0x1f1,	/* jmp 0x3fbeef */
+		0xbeef
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, 0x3fbeef);
+	ck_assert_uint_eq(getsp(), 0xffff);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1184,6 +1216,7 @@ suite_instr(void)
 	tcase_add_test(t, test_call);
 	tcase_add_test(t, test_cbisbi);
 	tcase_add_test(t, test_in);
+	tcase_add_test(t, test_jmp);
 	tcase_add_test(t, test_mov);
 	tcase_add_test(t, test_or);
 	tcase_add_test(t, test_ori);
@@ -1203,6 +1236,7 @@ suite_instr(void)
 	tcase_add_test(t, test_call22);
 	tcase_add_test(t, test_eicall22);
 	tcase_add_test(t, test_eijump22);
+	tcase_add_test(t, test_jmp22);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("math");
