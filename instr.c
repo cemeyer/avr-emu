@@ -586,15 +586,24 @@ instr_jmp(struct instr_decode_common *idc)
 	pc = addr - instr_size;
 }
 
+/*
+ * mode:
+ *   0: with displacement
+ *   1: postinc
+ *   2: predec
+ *
+ * displace:
+ *   Always zero for X LD modes, but can be +[0, 63] for Y/Z modes.
+ */
 static inline void
-instr_ld_common(uint8_t rp, uint8_t extaddr, const char *name,
-    struct instr_decode_common *idc)
+instr_ld_common(uint8_t rp, uint8_t extaddr, uint8_t mode, uint8_t displace,
+    const char *name, struct instr_decode_common *idc)
 {
 	uint32_t addr;
 	bool predec, postinc;
 
 	predec = postinc = false;
-	switch (bits(idc->instr, 1, 0)) {
+	switch (mode) {
 	case 1:
 		postinc = true;
 		break;
@@ -618,6 +627,9 @@ instr_ld_common(uint8_t rp, uint8_t extaddr, const char *name,
 
 	if (predec)
 		addr = (addr - 1) & 0xffffff;
+
+	if (!predec && !postinc)
+		addr = (addr + displace) & 0xffffff;
 
 	if (pc_mem_max_256b)
 		addr &= 0xff;
@@ -644,20 +656,31 @@ void
 instr_ldx(struct instr_decode_common *idc)
 {
 
-	instr_ld_common(REGP_X, RAMPX, "X", idc);
+	instr_ld_common(REGP_X, RAMPX, bits(idc->instr, 1, 0), 0, "X", idc);
 }
 
 void
 instr_ldyz(struct instr_decode_common *idc)
 {
+	uint8_t displace, mode;
 	bool Y;
 
 	Y = bits(idc->instr, 3, 3);
 
+	if (bits(idc->instr, 12, 12) == 0) {
+		mode = 0;
+		displace = (bits(idc->instr, 13, 13) >> 8) |
+		    (bits(idc->instr, 11, 10) >> 7) |
+		    bits(idc->instr, 2, 0);
+	} else {
+		mode = bits(idc->instr, 1, 0);
+		displace = 0;
+	}
+
 	if (Y)
-		instr_ld_common(REGP_Y, RAMPY, "Y", idc);
+		instr_ld_common(REGP_Y, RAMPY, mode, displace, "Y", idc);
 	else
-		instr_ld_common(REGP_Z, RAMPZ, "Z", idc);
+		instr_ld_common(REGP_Z, RAMPZ, mode, displace, "Z", idc);
 }
 
 void

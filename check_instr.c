@@ -1331,6 +1331,7 @@ START_TEST(test_ldy)
 		0x8008 | 0x50,	/* ld r5, Y */
 		0x9009 | 0x50,	/* ld r5, Y+ */
 		0x900a | 0x50,	/* ld r5, -Y */
+		0x8008 | 0x457,	/* ldd r5, Y+$f */
 	};
 
 	install_words(code, PC_START, sizeof(code));
@@ -1357,6 +1358,15 @@ START_TEST(test_ldy)
 	ck_assert_uint_eq(memory[RAMPY], 0x3e);
 	ck_assert_uint_eq(memory[5], 0x55);
 
+	memory[RAMPY] = 0;
+	memwriteword(REGP_Y, 0xfff1);
+	memset(&memory[0x10000], 0xba, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memword(REGP_Y), 0xfff1);
+	ck_assert_uint_eq(memory[RAMPY], 0);
+	ck_assert_uint_eq(memory[5], 0xba);
+
 	memset(&memory[0x3effff], 0, 1);
 	memset(&memory[0x100], 0, 1);
 }
@@ -1368,6 +1378,7 @@ START_TEST(test_ldy64)
 		0x8008 | 0x50,	/* ld r5, Y */
 		0x9009 | 0x50,	/* ld r5, Y+ */
 		0x900a | 0x50,	/* ld r5, -Y */
+		0x8008 | 0x457,	/* ldd r5, Y+$f */
 	};
 
 	install_words(code, PC_START, sizeof(code));
@@ -1394,6 +1405,15 @@ START_TEST(test_ldy64)
 	ck_assert_uint_eq(memory[RAMPY], 0x3f);
 	ck_assert_uint_eq(memory[5], 0x55);
 
+	memory[RAMPY] = 0;
+	memwriteword(REGP_Y, 0xfff1);
+	memset(memory, 0xba, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memword(REGP_Y), 0xfff1);
+	ck_assert_uint_eq(memory[RAMPY], 0);
+	ck_assert_uint_eq(memory[5], 0xba);
+
 	memset(&memory[0x3effff], 0, 1);
 	memset(&memory[0x100], 0, 1);
 	memset(&memory[RAMPY], 0, 1);
@@ -1406,6 +1426,7 @@ START_TEST(test_ldy256)
 		0x8008 | 0x50,	/* ld r5, Y */
 		0x9009 | 0x50,	/* ld r5, Y+ */
 		0x900a | 0x50,	/* ld r5, -Y */
+		0x8008 | 0x457,	/* ldd r5, Y+$f */
 	};
 
 	install_words(code, PC_START, sizeof(code));
@@ -1434,6 +1455,13 @@ START_TEST(test_ldy256)
 	ck_assert_uint_eq(memory[RAMPY], 0x3f);
 	ck_assert_uint_eq(memory[5], 0xbb);
 
+	memwriteword(REGP_Y, 0x5f1);
+	memset(memory, 0xba, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memword(REGP_Y), 0x5f1);
+	ck_assert_uint_eq(memory[5], 0xba);
+
 	memset(&memory[0xff], 0, 1);
 	memset(&memory[RAMPY], 0, 1);
 }
@@ -1445,6 +1473,7 @@ START_TEST(test_ldz)
 		0x8000 | 0x50,	/* ld r5, Z */
 		0x9001 | 0x50,	/* ld r5, Z+ */
 		0x9002 | 0x50,	/* ld r5, -Z */
+		0x8000 | 0x457,	/* ldd r5, Z+$f */
 	};
 
 	install_words(code, PC_START, sizeof(code));
@@ -1482,6 +1511,7 @@ START_TEST(test_ldz64)
 		0x8000 | 0x50,	/* ld r5, Z */
 		0x9001 | 0x50,	/* ld r5, Z+ */
 		0x9002 | 0x50,	/* ld r5, -Z */
+		0x8000 | 0x457,	/* ldd r5, Z+$f */
 	};
 
 	install_words(code, PC_START, sizeof(code));
@@ -1520,6 +1550,7 @@ START_TEST(test_ldz256)
 		0x8000 | 0x50,	/* ld r5, Z */
 		0x9001 | 0x50,	/* ld r5, Z+ */
 		0x9002 | 0x50,	/* ld r5, -Z */
+		0x8000 | 0x457,	/* ldd r5, Z+$f */
 	};
 
 	install_words(code, PC_START, sizeof(code));
