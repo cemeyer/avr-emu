@@ -5,6 +5,5 @@ compiler:
 before_install:
     - sudo apt-get -y install check
 script:
-    - make NEWGCCFLAGS= EXTRAFLAGS=-lrt
-    - make NEWGCCFLAGS= EXTRAFLAGS=-lrt check
-    - make NEWGCCFLAGS= EXTRAFLAGS=-lrt msp430-sym
+    - make NEWGCCFLAGS= LDFLAGS=-lrt
+    - make NEWGCCFLAGS= LDFLAGS=-lrt checkrun

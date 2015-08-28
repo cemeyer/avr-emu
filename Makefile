@@ -22,7 +22,7 @@ ifneq (,$(findstring clang,$(CC_VER)))
 endif
 
 FLAGS=		$(WARNFLAGS) $(OTHERFLAGS) $(OPTFLAGS) $(GLIB_FLAGS) $(NEWGCCFLAGS) $(CFLAGS)
-LDLIBS=		$(GLIB_LDFLAGS)
+LDLIBS=		$(GLIB_LDFLAGS) $(LDFLAGS)
 
 $(PROG): $(SRCS) $(HDRS)
 	$(CC) $(FLAGS) $(SRCS) -o $@ $(LDLIBS)
