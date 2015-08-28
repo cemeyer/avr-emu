@@ -13,7 +13,7 @@ AVR is fairly old GUI simulator. It's not clear it would work well for my
 purposes. simavr is a much newer project, started in 2009-2010; unfortunately
 it is GPLv3 and seems to have constant bugs (evidenced by the Github issues
 list). Simulavr is an older project, but has also seen recent work (as recently
-as 2014). It is GPLv2+.
+as 2014). Simulavr is GPLv2+.
 
 Building
 ========
@@ -89,5 +89,6 @@ Style: The C sources attempt to follow BSD's
 [style(9)](http://www.freebsd.org/cgi/man.cgi?query=style&sektion=9). Style fix
 patches are welcome.
 
-Most of the emulator lives in `main.c`. Most of the GDB remote stub lives in
-`gdbstub.c`. There are instruction emulation unit tests in `check_instr.c`.
+Most of the emulator lives in `main.c`; instruction implementations are in
+`instr.c`. Most of the GDB remote stub lives in `gdbstub.c`. There are
+instruction emulation unit tests in `check_instr.c`.
