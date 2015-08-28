@@ -554,6 +554,23 @@ instr_in(struct instr_decode_common *idc)
 }
 
 void
+instr_inc(struct instr_decode_common *idc)
+{
+	uint8_t rd, res;
+
+	res = memory[idc->ddddd] + 1;
+	memory[idc->ddddd] = res;
+
+	logic_flags8(res, &idc->setflags, &idc->clrflags);
+	if (res == 0x80) {
+		idc->clrflags &= ~SREG_V;
+		idc->clrflags |= SREG_S;
+		idc->setflags &= ~SREG_S;
+		idc->setflags |= SREG_V;
+	}
+}
+
+void
 instr_mov(struct instr_decode_common *idc)
 {
 

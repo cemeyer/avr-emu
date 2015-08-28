@@ -50,6 +50,7 @@ void instr_elpmz(struct instr_decode_common *);
 void instr_fmul(struct instr_decode_common *);
 void instr_fmulsu(struct instr_decode_common *);
 void instr_in(struct instr_decode_common *);
+void instr_inc(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);
 void instr_movw(struct instr_decode_common *);
 void instr_mul(struct instr_decode_common *);
