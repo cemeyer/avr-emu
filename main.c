@@ -21,6 +21,8 @@ uint16_t	 flash[ 0x1000000 / sizeof(uint16_t)];
 
 /* Machine model characteristics */
 bool		 pc22;
+bool		 pc_mem_max_64k;
+bool		 pc_mem_max_256b;
 
 /* Emulater / GDB auxiliary info */
 uint64_t	 start;		/* Start time in us */
@@ -62,9 +64,8 @@ static struct instr_decode avr_instr[] = {
 	{ 0x9001, 0xfe07, instr_unimp/*LD Y+/Z+*/, .ddddd84 = true },
 	{ 0x9002, 0xfe07, instr_unimp/*LD -Y/-Z*/, .ddddd84 = true },
 	{ 0x9004, 0xfe0c, instr_elpmz, .ddddd84 = true },
-	{ 0x900c, 0xfe0f, instr_unimp/*LD X*/, .ddddd84 = true },
-	{ 0x900d, 0xfe0f, instr_unimp/*LD X+*/, .ddddd84 = true },
-	{ 0x900e, 0xfe0f, instr_unimp/*LD -X*/, .ddddd84 = true },
+	{ 0x900c, 0xfe0e, instr_ldx, .ddddd84 = true },
+	{ 0x900e, 0xfe0f, instr_ldx, .ddddd84 = true },
 	{ 0x900f, 0xfe0f, instr_unimp/*POP*/, .ddddd84 = true },
 	{ 0x9200, 0xfe0f, instr_unimp/*STS*/, .ddddd84 = true, .imm16 = true },
 	{ 0x9201, 0xfe07, instr_unimp/*ST Y+/Z+*/, .ddddd84 = true },
@@ -130,7 +131,10 @@ void
 init(void)
 {
 
+	pc = 0;
 	pc22 = false;
+	pc_mem_max_256b = false;
+	pc_mem_max_64k = false;
 	insns = 0;
 	off = false;
 	skip_next_instruction = false;

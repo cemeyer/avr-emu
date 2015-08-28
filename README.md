@@ -13,7 +13,8 @@ AVR is fairly old GUI simulator. It's not clear it would work well for my
 purposes. simavr is a much newer project, started in 2009-2010; unfortunately
 it is GPLv3 and seems to have constant bugs (evidenced by the Github issues
 list). Simulavr is an older project, but has also seen recent work (as recently
-as 2014). Simulavr is GPLv2+.
+as 2014). Simulavr is GPLv2+ and does not seem to support larger (>16-bit
+addressing) AVR devices.
 
 Building
 ========

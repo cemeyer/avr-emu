@@ -30,6 +30,7 @@ $(PROG): $(SRCS) $(HDRS)
 checkrun: check_instr
 	./check_instr
 
+checkall: check_instr
 check_instr: $(CHECK_SRCS) $(SRCS) $(HDRS)
 	$(CC) $(FLAGS) -DEMU_CHECK $(CHECK_SRCS) $(SRCS) -o $@ -lcheck $(LDLIBS)
 

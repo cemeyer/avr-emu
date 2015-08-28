@@ -32,6 +32,25 @@ setup_machine22(void)
 }
 
 void
+setup_machine64(void)
+{
+
+	// zero regs/mem, clear symbols
+	init();
+	pc_mem_max_64k = true;
+}
+
+void
+setup_machine256(void)
+{
+
+	// zero regs/mem, clear symbols
+	init();
+	pc_mem_max_64k = true;
+	pc_mem_max_256b = true;
+}
+
+void
 teardown_machine(void)
 {
 
@@ -1192,6 +1211,120 @@ START_TEST(test_jmp22)
 }
 END_TEST
 
+START_TEST(test_ldx)
+{
+	uint16_t code[] = {
+		0x900c | 0x50,	/* ld r5, X */
+		0x900d | 0x50,	/* ld r5, X+ */
+		0x900e | 0x50,	/* ld r5, -X */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memset(&memory[0x100], 0xaa, 1);
+
+	memwriteword(REGP_X, 0x100);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memword(REGP_X), 0x100);
+	ck_assert_uint_eq(memory[5], 0xaa);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memword(REGP_X), 0x101);
+	ck_assert_uint_eq(memory[5], 0xaa);
+
+	memory[RAMPX] = 0x3f;
+	memwriteword(REGP_X, 0);
+	memset(&memory[0x3effff], 0x55, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memword(REGP_X), 0xffff);
+	ck_assert_uint_eq(memory[RAMPX], 0x3e);
+	ck_assert_uint_eq(memory[5], 0x55);
+
+	memset(&memory[0x3effff], 0, 1);
+	memset(&memory[0x100], 0, 1);
+}
+END_TEST
+
+START_TEST(test_ldx64)
+{
+	uint16_t code[] = {
+		0x900c | 0x50,	/* ld r5, X */
+		0x900d | 0x50,	/* ld r5, X+ */
+		0x900e | 0x50,	/* ld r5, -X */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memset(&memory[0x100], 0xaa, 1);
+
+	memwriteword(REGP_X, 0x100);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memword(REGP_X), 0x100);
+	ck_assert_uint_eq(memory[5], 0xaa);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memword(REGP_X), 0x101);
+	ck_assert_uint_eq(memory[5], 0xaa);
+
+	memory[RAMPX] = 0x3f;
+	memwriteword(REGP_X, 0);
+	memset(&memory[0xffff], 0x55, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memword(REGP_X), 0xffff);
+	ck_assert_uint_eq(memory[RAMPX], 0x3f);
+	ck_assert_uint_eq(memory[5], 0x55);
+
+	memset(&memory[0x3effff], 0, 1);
+	memset(&memory[0x100], 0, 1);
+	memset(&memory[RAMPX], 0, 1);
+}
+END_TEST
+
+START_TEST(test_ldx256)
+{
+	uint16_t code[] = {
+		0x900c | 0x50,	/* ld r5, X */
+		0x900d | 0x50,	/* ld r5, X+ */
+		0x900e | 0x50,	/* ld r5, -X */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memset(memory, 0xaa, 1);
+
+	memwriteword(REGP_X, 0x100);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memword(REGP_X), 0x100);
+	ck_assert_uint_eq(memory[5], 0xaa);
+
+	memwriteword(REGP_X, 0x1ff);
+	memset(&memory[0xff], 0xbb, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	/* Only XLO is updated */
+	ck_assert_uint_eq(memword(REGP_X), 0x100);
+	ck_assert_uint_eq(memory[5], 0xbb);
+
+	memory[RAMPX] = 0x3f;
+	memwriteword(REGP_X, 0);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memword(REGP_X), 0x00ff);
+	ck_assert_uint_eq(memory[RAMPX], 0x3f);
+	ck_assert_uint_eq(memory[5], 0xbb);
+
+	memset(&memory[0xff], 0, 1);
+	memset(&memory[RAMPX], 0, 1);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1223,6 +1356,7 @@ suite_instr(void)
 	tcase_add_test(t, test_out);
 	tcase_add_test(t, test_push);
 	tcase_add_test(t, test_elpm);
+	tcase_add_test(t, test_ldx);
 	tcase_add_test(t, test_xor);
 	suite_add_tcase(s, t);
 
@@ -1237,6 +1371,16 @@ suite_instr(void)
 	tcase_add_test(t, test_eicall22);
 	tcase_add_test(t, test_eijump22);
 	tcase_add_test(t, test_jmp22);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("256 byte RAM");
+	tcase_add_checked_fixture(t, setup_machine256, teardown_machine);
+	tcase_add_test(t, test_ldx256);
+	suite_add_tcase(s, t);
+
+	t = tcase_create("64 kB RAM");
+	tcase_add_checked_fixture(t, setup_machine64, teardown_machine);
+	tcase_add_test(t, test_ldx64);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("math");

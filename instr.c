@@ -587,6 +587,59 @@ instr_jmp(struct instr_decode_common *idc)
 }
 
 void
+instr_ldx(struct instr_decode_common *idc)
+{
+	uint32_t addr;
+	bool predec, postinc;
+
+	predec = postinc = false;
+	switch (bits(idc->instr, 1, 0)) {
+	case 1:
+		postinc = true;
+		break;
+	case 2:
+		predec = true;
+		break;
+	default:
+		break;
+	}
+
+	if ((predec || postinc) && (idc->ddddd == 26 || idc->ddddd == 27)) {
+		printf("%s: LD r26, X+/- and LD r27, X+/- are documented as "
+		    "undefined in the AVR Instruction set manual.\n",
+		    __func__);
+		illins(idc->instr);
+	}
+
+	addr = memword(REGP_X);
+	if (!pc_mem_max_64k)
+		addr |= ((uint32_t)memory[RAMPX] << 16);
+
+	if (predec)
+		addr = (addr - 1) & 0xffffff;
+
+	if (pc_mem_max_256b)
+		addr &= 0xff;
+	else if (pc_mem_max_64k)
+		addr &= 0xffff;
+
+	memory[idc->ddddd] = memory[addr];
+
+	if (postinc)
+		addr++;
+
+	if (postinc || predec) {
+		if (pc_mem_max_256b)
+			memory[REGP_X] = (addr & 0xff);
+		else {
+			memwriteword(REGP_X, addr & 0xffff);
+			if (!pc_mem_max_64k)
+				memory[RAMPX] = (addr >> 16);
+		}
+	}
+}
+
+void
 instr_mov(struct instr_decode_common *idc)
 {
 

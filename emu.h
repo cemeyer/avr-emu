@@ -53,6 +53,10 @@ typedef unsigned int uns;
 #define	SP_LO		0x5D
 #define	EIND		0x5C
 #define	RAMPZ		0x5B
+#define	RAMPY		0x5A
+#define	RAMPX		0x59
+#define	RAMPD		0x58
+#define	CCP		0x54
 
 #define	IO_BASE		0x20
 #define	SREG_IO		(SREG - IO_BASE)
@@ -76,6 +80,8 @@ extern bool		 skip_next_instruction;
 extern uint8_t		 memory[0x1000000];
 extern uint16_t		 flash[ 0x1000000 / sizeof(uint16_t)];
 extern bool		 pc22;
+extern bool		 pc_mem_max_64k;
+extern bool		 pc_mem_max_256b;
 extern bool		 off;
 extern bool		 replay_mode;
 extern bool		 stepone;
