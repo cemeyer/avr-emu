@@ -494,6 +494,32 @@ instr_elpmz(struct instr_decode_common *idc)
 }
 
 void
+instr_fmul(struct instr_decode_common *idc)
+{
+	uint8_t *set, *clr;
+	uint16_t res;
+
+	set = &idc->setflags;
+	clr = &idc->clrflags;
+
+	res = (uint16_t)memory[idc->ddddd] * (uint16_t)memory[idc->rrrrr];
+
+	/* Not quite the same as mul_flags16, beware. */
+	if ((res & 0x8000) != 0)
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+
+	res <<= 1;
+	memwriteword(0, res);
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+}
+
+void
 instr_in(struct instr_decode_common *idc)
 {
 	uint8_t io_port;

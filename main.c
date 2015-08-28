@@ -42,7 +42,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0x0100, 0xff00, instr_movw, .dddd74 = true, .rrrr30 = true },
 	{ 0x0200, 0xff00, instr_muls, .dddd74 = true, .rrrr30 = true },
 	{ 0x0300, 0xff88, instr_mulsu, .ddd64 = true, .rrr20 = true },
-	{ 0x0308, 0xff88, instr_unimp/*FMUL*/, .ddd64 = true, .rrr20 = true },
+	{ 0x0308, 0xff88, instr_fmul, .ddd64 = true, .rrr20 = true },
 	{ 0x0380, 0xff80, instr_unimp/*FMULS(U)*/, .ddd64 = true, .rrr20 = true },
 	{ 0x0400, 0xec00, instr_cpc, .ddddd84 = true, .rrrrr9_30 = true },
 	{ 0x0800, 0xec00, instr_unimp/*SUB(C)*/, .ddddd84 = true, .rrrrr9_30 = true },
