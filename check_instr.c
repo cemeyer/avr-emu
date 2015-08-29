@@ -1598,6 +1598,42 @@ START_TEST(test_ldi)
 }
 END_TEST
 
+START_TEST(test_lds)
+{
+	uint16_t code[] = {
+		0x9000 | /*dddd*/ 0x10,	/* lds r1, $0xbeef */
+		0xbeef,
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[RAMPD] = 0x1;
+	memset(&memory[0x1beef], 0xc0, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[1], 0xc0);
+	memset(&memory[0x1beef], 0, 1);
+}
+END_TEST
+
+START_TEST(test_lds64)
+{
+	uint16_t code[] = {
+		0x9000 | /*dddd*/ 0x10,	/* lds r1, $0xbeef */
+		0xbeef,
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[RAMPD] = 0x1;
+	memset(&memory[0xbeef], 0xc0, 1);
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[1], 0xc0);
+	memset(&memory[0xbeef], 0, 1);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1624,6 +1660,7 @@ suite_instr(void)
 	tcase_add_test(t, test_in);
 	tcase_add_test(t, test_jmp);
 	tcase_add_test(t, test_ldi);
+	tcase_add_test(t, test_lds);
 	tcase_add_test(t, test_mov);
 	tcase_add_test(t, test_or);
 	tcase_add_test(t, test_ori);
@@ -1658,6 +1695,7 @@ suite_instr(void)
 
 	t = tcase_create("64 kB RAM");
 	tcase_add_checked_fixture(t, setup_machine64, teardown_machine);
+	tcase_add_test(t, test_lds64);
 	tcase_add_test(t, test_ldx64);
 	tcase_add_test(t, test_ldy64);
 	tcase_add_test(t, test_ldz64);

@@ -593,6 +593,18 @@ instr_ldi(struct instr_decode_common *idc)
 	memory[idc->ddddd] = idc->imm_u8;
 }
 
+void
+instr_lds(struct instr_decode_common *idc)
+{
+	uint32_t addr, pc2;
+
+	addr = idc->imm_u16;
+	if (!pc_mem_max_64k)
+		addr |= ((uint32_t)memory[RAMPD] << 16);
+
+	memory[idc->ddddd] = memory[addr];
+}
+
 /*
  * mode:
  *   0: with displacement
