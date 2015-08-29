@@ -890,8 +890,8 @@ instr_rcalljmp(struct instr_decode_common *idc)
 	/* Implicit +1 from instr_size. */
 }
 
-void
-instr_ret(struct instr_decode_common *idc __unused)
+static inline void
+instr_ret_common(void)
 {
 	uint32_t addr;
 
@@ -903,6 +903,21 @@ instr_ret(struct instr_decode_common *idc __unused)
 		addr &= 0x3fffff;
 	}
 	pc = addr - instr_size;
+}
+
+void
+instr_ret(struct instr_decode_common *idc __unused)
+{
+
+	instr_ret_common();
+}
+
+void
+instr_reti(struct instr_decode_common *idc __unused)
+{
+
+	instr_ret_common();
+	memory[SREG] |= SREG_I;
 }
 
 void

@@ -1832,6 +1832,49 @@ START_TEST(test_ret22)
 }
 END_TEST
 
+START_TEST(test_reti)
+{
+	uint16_t code[] = {
+		0x9518,		/* reti */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	setsp(0xfffd);
+	memory[0xfffe] = 0xab;
+	memory[0xffff] = 0xcd;
+
+	memory[SREG] = 0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, 0xabcd);
+	ck_assert_uint_eq(memory[SREG], SREG_I);
+	ck_assert_uint_eq(getsp(), 0xffff);
+}
+END_TEST
+
+START_TEST(test_reti22)
+{
+	uint16_t code[] = {
+		0x9518,		/* reti */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	setsp(0xfffc);
+	memory[0xfffd] = 0xf0;
+	memory[0xfffe] = 0xab;
+	memory[0xffff] = 0xcd;
+
+	memory[SREG] = 0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, 0x30abcd);
+	ck_assert_uint_eq(memory[SREG], SREG_I);
+	ck_assert_uint_eq(getsp(), 0xffff);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1870,6 +1913,7 @@ suite_instr(void)
 	tcase_add_test(t, test_ldy);
 	tcase_add_test(t, test_ldz);
 	tcase_add_test(t, test_ret);
+	tcase_add_test(t, test_reti);
 	tcase_add_test(t, test_xor);
 	suite_add_tcase(s, t);
 
@@ -1886,6 +1930,7 @@ suite_instr(void)
 	tcase_add_test(t, test_jmp22);
 	tcase_add_test(t, test_rcall22);
 	tcase_add_test(t, test_ret22);
+	tcase_add_test(t, test_reti22);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("256 byte RAM");
