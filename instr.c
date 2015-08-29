@@ -412,13 +412,22 @@ instr_cpc(struct instr_decode_common *idc)
 	idc->setflags &= ~SREG_Z;
 }
 
+/* CPI, SBCI, SUBI */
 void
 instr_cpi(struct instr_decode_common *idc)
 {
 	uint8_t rd, res;
+	bool store, carry;
+
+	store = ((bits(idc->instr, 14, 13) >> 13) == 2);
+	carry = (bits(idc->instr, 12, 12) == 0);
 
 	rd = memory[idc->ddddd];
 	res = rd - idc->imm_u8;
+	if (carry && (memory[SREG] & SREG_C) != 0)
+		res--;
+	if (store)
+		memory[idc->ddddd] = res;
 
 	sub_flags8(res, rd, idc->imm_u8, &idc->setflags, &idc->clrflags);
 }
