@@ -891,6 +891,21 @@ instr_rcalljmp(struct instr_decode_common *idc)
 }
 
 void
+instr_ret(struct instr_decode_common *idc __unused)
+{
+	uint32_t addr;
+
+	addr = ((uint32_t)popbyte() << 8);
+	addr |= popbyte();
+	if (pc22) {
+		addr <<= 8;
+		addr |= popbyte();
+		addr &= 0x3fffff;
+	}
+	pc = addr - instr_size;
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 
