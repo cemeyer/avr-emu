@@ -586,6 +586,13 @@ instr_jmp(struct instr_decode_common *idc)
 	pc = addr - instr_size;
 }
 
+void
+instr_ldi(struct instr_decode_common *idc)
+{
+
+	memory[idc->ddddd] = idc->imm_u8;
+}
+
 /*
  * mode:
  *   0: with displacement

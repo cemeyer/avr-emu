@@ -1584,6 +1584,20 @@ START_TEST(test_ldz256)
 }
 END_TEST
 
+START_TEST(test_ldi)
+{
+	uint16_t code[] = {
+		0xe000 | /*KKKK_KKKK*/ 0xf0f | /*dddd*/ 0x10,	/* ldi r17, $0xff */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[17], 0xff);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1609,6 +1623,7 @@ suite_instr(void)
 	tcase_add_test(t, test_cbisbi);
 	tcase_add_test(t, test_in);
 	tcase_add_test(t, test_jmp);
+	tcase_add_test(t, test_ldi);
 	tcase_add_test(t, test_mov);
 	tcase_add_test(t, test_or);
 	tcase_add_test(t, test_ori);

@@ -108,7 +108,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0xb800, 0xf800, instr_out, .ddddd84 = true },
 	{ 0xc000, 0xf000, instr_unimp/*RJUMP*/ },
 	{ 0xd000, 0xf000, instr_unimp/*RCALL*/ },
-	{ 0xe000, 0xf000, instr_unimp/*LDI*/, .dddd74 = true, .KKKK118_30 = true },
+	{ 0xe000, 0xf000, instr_ldi, .dddd74 = true, .KKKK118_30 = true },
 	{ 0xf000, 0xf800, instr_brb, .rrr20 = true },
 	{ 0xf800, 0xfe08, instr_bld, .ddddd84 = true, .rrr20 = true },
 	{ 0xfa00, 0xfe08, instr_bst, .ddddd84 = true, .rrr20 = true },
