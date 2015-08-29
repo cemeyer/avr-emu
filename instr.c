@@ -921,6 +921,20 @@ instr_reti(struct instr_decode_common *idc __unused)
 }
 
 void
+instr_ror(struct instr_decode_common *idc)
+{
+	uint8_t rd, res;
+
+	rd = memory[idc->ddddd];
+	res = (rd >> 1);
+	if ((memory[SREG] & SREG_C) != 0)
+		res |= 0x80;
+	memory[idc->ddddd] = res;
+
+	asr_flags8(res, rd, &idc->setflags, &idc->clrflags);
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 

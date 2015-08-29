@@ -1875,6 +1875,42 @@ START_TEST(test_reti22)
 }
 END_TEST
 
+START_TEST(test_ror)
+{
+	uint16_t code[] = {
+		0x9407 | 0x50,	/* ror r5 */
+		0x9407 | 0x50,	/* ror r5 */
+		0x9407 | 0x50,	/* ror r5 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[SREG] = sreg_start = SREG_I | SREG_T | SREG_H;
+	memory[5] = 0;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[5], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+
+	memory[5] = 0xf1;
+	memory[SREG] = sreg_start | SREG_C;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[5], 0xf8);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C | SREG_N | SREG_S);
+
+	memory[5] = 1;
+	memory[SREG] = sreg_start;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[5], 0);
+	ck_assert_uint_eq(memory[SREG],
+	    sreg_start | SREG_C | SREG_Z | SREG_V | SREG_S);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1971,6 +2007,7 @@ suite_instr(void)
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_asr);
 	tcase_add_test(t, test_lsr);
+	tcase_add_test(t, test_ror);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("branches");
