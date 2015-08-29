@@ -507,7 +507,6 @@ instr_elpmz(struct instr_decode_common *idc)
 	if (postinc) {
 		addr++;
 		memwriteword(REGP_Z, addr & 0xffff);
-		memory[RAMPZ] = (addr >> 16);
 	}
 }
 

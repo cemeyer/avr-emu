@@ -1002,8 +1002,7 @@ START_TEST(test_elpm)
 	ck_assert_uint_eq(pc, PC_START + 6);
 	ck_assert_uint_eq(memory[29], 0xb5);
 	ck_assert_uint_eq(memword(REGP_Z), 0);
-	/* Not 100% sure RAMPZ:Z is actually treated as a 24-bit idx: */
-	ck_assert_uint_eq(memory[RAMPZ], 0x3f);
+	ck_assert_uint_eq(memory[RAMPZ], 0x3e);
 
 	memset(&flash[0x3efffe / 2], 0, sizeof(flash[0]));
 }
