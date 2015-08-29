@@ -56,6 +56,7 @@ void instr_ldi(struct instr_decode_common *);
 void instr_lds(struct instr_decode_common *);
 void instr_ldx(struct instr_decode_common *);
 void instr_ldyz(struct instr_decode_common *);
+void instr_lsr(struct instr_decode_common *);
 void instr_mov(struct instr_decode_common *);
 void instr_movw(struct instr_decode_common *);
 void instr_mul(struct instr_decode_common *);

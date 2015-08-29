@@ -702,6 +702,18 @@ instr_ldyz(struct instr_decode_common *idc)
 }
 
 void
+instr_lsr(struct instr_decode_common *idc)
+{
+	uint8_t rd, res;
+
+	rd = memory[idc->ddddd];
+	res = (rd >> 1);
+	memory[idc->ddddd] = res;
+
+	asr_flags8(res, rd, &idc->setflags, &idc->clrflags);
+}
+
+void
 instr_mov(struct instr_decode_common *idc)
 {
 

@@ -1633,6 +1633,41 @@ START_TEST(test_lds64)
 }
 END_TEST
 
+START_TEST(test_lsr)
+{
+	uint16_t code[] = {
+		0x9406 | /*dddd*/ 0x10,		/* lsr r1 */
+		0x9406 | /*dddd*/ 0x10,		/* lsr r1 */
+		0x9406 | /*dddd*/ 0x10,		/* lsr r1 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	sreg_start = SREG_I | SREG_T | SREG_H;
+	memory[SREG] = sreg_start | SREG_N;
+
+	memory[1] = 0xff;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[1], 0x7f);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C | SREG_V | SREG_S);
+
+	memory[1] = 0x1;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[1], 0);
+	ck_assert_uint_eq(memory[SREG],
+	    sreg_start | SREG_C | SREG_Z | SREG_V | SREG_S);
+
+	memory[1] = 0;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[1], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1721,6 +1756,7 @@ suite_instr(void)
 	t = tcase_create("shifts");
 	tcase_add_checked_fixture(t, setup_machine, teardown_machine);
 	tcase_add_test(t, test_asr);
+	tcase_add_test(t, test_lsr);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("branches");
