@@ -1702,6 +1702,23 @@ START_TEST(test_neg)
 }
 END_TEST
 
+START_TEST(test_pop)
+{
+	uint16_t code[] = {
+		0x900f | /*rrrrr*/ 0x1f0,	/* pop r31 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	memory[0xffff] = 0xbe;
+	setsp(0xfffe);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(getsp(), 0xffff);
+	ck_assert_uint_eq(memory[31], 0xbe);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1733,6 +1750,7 @@ suite_instr(void)
 	tcase_add_test(t, test_or);
 	tcase_add_test(t, test_ori);
 	tcase_add_test(t, test_out);
+	tcase_add_test(t, test_pop);
 	tcase_add_test(t, test_push);
 	tcase_add_test(t, test_elpm);
 	tcase_add_test(t, test_ldx);

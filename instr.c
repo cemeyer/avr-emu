@@ -188,6 +188,16 @@ sub_flags8(uint8_t res, uint8_t rd, uint8_t rr, uint8_t *set, uint8_t *clr)
 		*clr |= SREG_H;
 }
 
+static inline uint8_t
+popbyte(void)
+{
+	uint16_t sp;
+
+	sp = getsp();
+	setsp(sp + 1);
+	return (memory[sp + 1]);
+}
+
 static inline void
 pushbyte(uint8_t b)
 {
@@ -840,6 +850,13 @@ instr_out(struct instr_decode_common *idc)
 
 	io_port = (bits(idc->instr, 10, 9) >> 5) | bits(idc->instr, 3, 0);
 	memory[IO_BASE + io_port] = memory[idc->ddddd];
+}
+
+void
+instr_pop(struct instr_decode_common *idc)
+{
+
+	memory[idc->ddddd] = popbyte();
 }
 
 void

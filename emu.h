@@ -137,6 +137,7 @@ bits(uint16_t v, unsigned max, unsigned min)
 	return v & mask;
 }
 
+/* The only big-endian register pair on this damn machine */
 static inline uint16_t
 getsp(void)
 {
