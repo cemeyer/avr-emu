@@ -1668,6 +1668,40 @@ START_TEST(test_lsr)
 }
 END_TEST
 
+START_TEST(test_neg)
+{
+	uint16_t code[] = {
+		0x9401 | 0x1f0 /*d=31*/,		/* neg r31 */
+		0x9401 | 0x1f0 /*d=31*/,		/* neg r31 */
+		0x9401 | 0x1f0 /*d=31*/,		/* neg r31 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[SREG] = sreg_start = SREG_I | SREG_T;
+	memory[31] = 0x55;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[31], (0u - 0x55) & 0xff);
+	ck_assert_uint_eq(memory[SREG],
+	    sreg_start | SREG_C | SREG_N | SREG_S | SREG_H);
+
+	memory[31] = 0x80;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[31], 0x80);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_C | SREG_N | SREG_V);
+
+	memory[31] = 0;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[31], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1751,6 +1785,7 @@ suite_instr(void)
 	tcase_add_test(t, test_mul);
 	tcase_add_test(t, test_muls);
 	tcase_add_test(t, test_mulsu);
+	tcase_add_test(t, test_neg);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("shifts");

@@ -62,6 +62,7 @@ void instr_movw(struct instr_decode_common *);
 void instr_mul(struct instr_decode_common *);
 void instr_muls(struct instr_decode_common *);
 void instr_mulsu(struct instr_decode_common *);
+void instr_neg(struct instr_decode_common *);
 void instr_nop(struct instr_decode_common *);
 void instr_or(struct instr_decode_common *);
 void instr_ori(struct instr_decode_common *);

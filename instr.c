@@ -772,6 +772,47 @@ instr_mulsu(struct instr_decode_common *idc)
 }
 
 void
+instr_neg(struct instr_decode_common *idc)
+{
+	uint8_t rd, res, *set, *clr;
+
+	rd = memory[idc->ddddd];
+	res = (0u - rd) & 0xff;
+	memory[idc->ddddd] = res;
+
+	set = &idc->setflags;
+	clr = &idc->clrflags;
+
+	if (res == 0) {
+		*set |= SREG_Z;
+		*clr |= SREG_C;
+	} else {
+		*clr |= SREG_Z;
+		*set |= SREG_C;
+	}
+	if ((res & 0x80) != 0)
+		*set |= SREG_N;
+	else
+		*clr |= SREG_N;
+
+	if (res == 0x80)
+		*set |= SREG_V;
+	else
+		*clr |= SREG_V;
+
+	if ((res & 0x08) || (rd & 0x08))
+		*set |= SREG_H;
+	else
+		*clr |= SREG_H;
+
+	if (((*set & SREG_N) && (*clr & SREG_V)) ||
+	    ((*clr & SREG_N) && (*set & SREG_V)))
+		*set |= SREG_S;
+	else
+		*clr |= SREG_S;
+}
+
+void
 instr_nop(struct instr_decode_common *idc __unused)
 {
 }
