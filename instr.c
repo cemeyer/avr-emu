@@ -389,13 +389,15 @@ instr_com(struct instr_decode_common *idc)
 		*clr |= (SREG_N | SREG_S);
 }
 
+/* CP, CPC, SUB, SBC */
 void
 instr_cpc(struct instr_decode_common *idc)
 {
-	bool carry_mode;
+	bool carry_mode, nostore;
 	uint8_t rr, rd, res;
 
 	carry_mode = (bits(idc->instr, 12, 12) == 0);
+	nostore = ((bits(idc->instr, 11, 10) >> 10) == 1);
 
 	rr = memory[idc->rrrrr];
 	rd = memory[idc->ddddd];
@@ -403,8 +405,11 @@ instr_cpc(struct instr_decode_common *idc)
 	res = rd - rr;
 	if (carry_mode && (memory[SREG] & SREG_C) != 0)
 		res -= 1;
+	if (!nostore)
+		memory[idc->ddddd] = res;
 
 	sub_flags8(res, rd, rr, &idc->setflags, &idc->clrflags);
+	idc->setflags &= ~SREG_Z;
 }
 
 void

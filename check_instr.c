@@ -759,11 +759,13 @@ START_TEST(test_cpc)
 	emulate1();
 	ck_assert_uint_eq(pc, PC_START + 2);
 	ck_assert_uint_eq(memory[2], 0x80);
+	/* CP, CPC does not set Z. */
 	ck_assert_uint_eq(memory[SREG],
-	    sreg_start | SREG_Z | SREG_V | SREG_S | SREG_H);
+	    sreg_start | SREG_V | SREG_S | SREG_H);
 
 	memory[4] = 0x0;
 	memory[5] = 0xff;
+	memory[SREG] |= SREG_Z;
 
 	emulate1();
 	ck_assert_uint_eq(pc, PC_START + 3);
@@ -1911,6 +1913,54 @@ START_TEST(test_ror)
 }
 END_TEST
 
+START_TEST(test_sbc)
+{
+	uint16_t code[] = {
+		0x0800 | 0x54,		/* sbc r5, r4 */
+		0x0800 | 0x54,		/* sbc r5, r4 */
+		0x0800 | 0x54,		/* sbc r5, r4 */
+		0x0800 | 0x54,		/* sbc r5, r4 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[SREG] = sreg_start = SREG_I | SREG_T;
+
+	memory[5] = 0;
+	memory[4] = 0;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[5], 0);
+	/* SREG_Z is never set; cleared except for zero result. */
+	ck_assert_uint_eq(memory[SREG], sreg_start);
+
+	memory[SREG] = sreg_start | SREG_Z | SREG_C;
+	memory[5] = 1;
+	memory[4] = 0;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[5], 0);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_Z);
+
+	memory[SREG] = sreg_start;
+	memory[5] = 0;
+	memory[4] = 0xfe;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[5], 2);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_H | SREG_C);
+
+	memory[SREG] = sreg_start;
+	memory[5] = 0x80;
+	memory[4] = 1;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memory[5], 0x7f);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_H | SREG_V | SREG_S);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -2001,6 +2051,7 @@ suite_instr(void)
 	tcase_add_test(t, test_muls);
 	tcase_add_test(t, test_mulsu);
 	tcase_add_test(t, test_neg);
+	tcase_add_test(t, test_sbc);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("shifts");
