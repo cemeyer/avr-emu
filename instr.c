@@ -966,6 +966,46 @@ instr_sbics(struct instr_decode_common *idc)
 }
 
 void
+instr_sbiw(struct instr_decode_common *idc)
+{
+	uint16_t res, rd;
+	uint8_t K, d, *set, *clr;
+
+	d = (bits(idc->instr, 5, 4) >> 3) + 24;
+	K = (bits(idc->instr, 7, 6) >> 2) | bits(idc->instr, 3, 0);
+
+	rd = memword(d);
+	res = rd - K;
+	memwriteword(d, res);
+
+	set = &idc->setflags;
+	clr = &idc->clrflags;
+
+	if (res == 0)
+		*set |= SREG_Z;
+	else
+		*clr |= SREG_Z;
+	if (0x8000 & res & ~rd)
+		*set |= SREG_C;
+	else
+		*clr |= SREG_C;
+	if (0x8000 & res)
+		*set |= SREG_N;
+	else
+		*clr |= SREG_N;
+	if (0x8000 & rd & ~res)
+		*set |= SREG_V;
+	else
+		*clr |= SREG_V;
+
+	if (((*set & SREG_N) && (*clr & SREG_V)) ||
+	    ((*clr & SREG_N) && (*set & SREG_V)))
+		*set |= SREG_S;
+	else
+		*clr |= SREG_S;
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 

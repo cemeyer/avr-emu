@@ -2053,6 +2053,27 @@ START_TEST(test_sbis)
 }
 END_TEST
 
+START_TEST(test_sbiw)
+{
+	uint16_t code[] = {
+		0x9700 | 0xcf | 0x30,		/* sbiw r31:30, 63 */
+	};
+	uint8_t sreg_start;
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0xff;
+	memory[30] = 0x3e;
+	memory[SREG] = sreg_start = SREG_I | SREG_T | SREG_H;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[30], 0xff);
+	ck_assert_uint_eq(memory[31], 0xfe);
+	ck_assert_uint_eq(memory[SREG], sreg_start | SREG_S | SREG_N);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -2146,6 +2167,7 @@ suite_instr(void)
 	tcase_add_test(t, test_sbc);
 	tcase_add_test(t, test_sbci);
 	tcase_add_test(t, test_subi);
+	tcase_add_test(t, test_sbiw);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("shifts");
