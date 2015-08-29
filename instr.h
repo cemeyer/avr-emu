@@ -73,6 +73,7 @@ void instr_rcalljmp(struct instr_decode_common *);
 void instr_ret(struct instr_decode_common *);
 void instr_reti(struct instr_decode_common *);
 void instr_ror(struct instr_decode_common *);
+void instr_sbics(struct instr_decode_common *);
 void instr_xor(struct instr_decode_common *);
 
 void instr_unimp(struct instr_decode_common *);

@@ -805,7 +805,6 @@ START_TEST(test_cpse)
 		0,			/* nop */
 		0,			/* nop */
 	};
-	uint8_t sreg_start;
 
 	install_words(code, PC_START, sizeof(code));
 
@@ -2001,6 +2000,59 @@ START_TEST(test_subi)
 }
 END_TEST
 
+START_TEST(test_sbic)
+{
+	uint16_t code[] = {
+		0x9900 | 0xf8 | 0x7,	/* sbic $1f, 7 */
+		0x9900 | 0xf0 | 0x5,	/* sbic $1e, 5 */
+		0x940e | 0x1f1,		/* call 0x3fbeef */
+		0xbeef,
+		0x9900,			/* sbic $0, 0 */
+		0,			/* nop */
+		0,			/* nop */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[IO_BASE + 0x1f] = 0x80;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(insns, 1);
+
+	memory[IO_BASE + 0x1e] = 0xdf;
+	emulate1();
+	/* Skips both words of 32-bit CALL imm16 */
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(insns, 2);
+
+	memory[IO_BASE + 0] = 0xfe;
+	emulate1();
+	/* Skips only one word of NOP */
+	ck_assert_uint_eq(pc, PC_START + 6);
+	ck_assert_uint_eq(insns, 3);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 7);
+	ck_assert_uint_eq(insns, 4);
+}
+END_TEST
+
+START_TEST(test_sbis)
+{
+	uint16_t code[] = {
+		0x9b00,		/* sbis $0, 0 */
+		0,		/* nop */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[IO_BASE + 0] = 1;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(insns, 1);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -2111,6 +2163,8 @@ suite_instr(void)
 	tcase_add_test(t, test_ijump);
 	tcase_add_test(t, test_rcall);
 	tcase_add_test(t, test_rjmp);
+	tcase_add_test(t, test_sbic);
+	tcase_add_test(t, test_sbis);
 	suite_add_tcase(s, t);
 
 	return s;

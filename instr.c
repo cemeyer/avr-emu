@@ -949,6 +949,23 @@ instr_ror(struct instr_decode_common *idc)
 }
 
 void
+instr_sbics(struct instr_decode_common *idc)
+{
+	uint8_t b, A;
+	bool ifset, bit;
+
+	ifset = (bits(idc->instr, 9, 9) != 0);
+
+	b = idc->rrrrr - 16;
+	A = (bits(idc->instr, 7, 3) >> 3);
+
+	bit = (memory[IO_BASE + A] & (1 << b));
+
+	if (ifset == bit)
+		skip_next_instruction = true;
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 
