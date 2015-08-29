@@ -1719,6 +1719,82 @@ START_TEST(test_pop)
 }
 END_TEST
 
+START_TEST(test_rcall)
+{
+	uint16_t code[] = {
+		0xd000 | /*k*/ 0x7ff,	/* rcall PC + 1 + $7ff */
+		0xd000 | /*k*/ 0xfff,	/* rcall PC + 1 + $-1 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1 + 0x7ff);
+	ck_assert_uint_eq(getsp(), 0xfffd);
+	ck_assert_uint_eq(memory[0xffff], (PC_START + 1) & 0xff);
+	ck_assert_uint_eq(memory[0xfffe], (PC_START + 1) >> 8);
+
+	pc = PC_START + 1;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2 - 1);
+	ck_assert_uint_eq(getsp(), 0xfffb);
+	ck_assert_uint_eq(memory[0xfffd], (PC_START + 2) & 0xff);
+	ck_assert_uint_eq(memory[0xfffc], (PC_START + 2) >> 8);
+}
+END_TEST
+
+START_TEST(test_rcall22)
+{
+	uint16_t code[] = {
+		0xd000 | /*k*/ 0x7ff,	/* rcall PC + 1 + $7ff */
+		0xd000 | /*k*/ 0xfff,	/* rcall PC + 1 + $-1 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1 + 0x7ff);
+	ck_assert_uint_eq(getsp(), 0xfffc);
+	ck_assert_uint_eq(memory[0xffff], (PC_START + 1) & 0xff);
+	ck_assert_uint_eq(memory[0xfffe], ((PC_START + 1) >> 8) & 0xff);
+	ck_assert_uint_eq(memory[0xfffd], (PC_START + 1) >> 16);
+
+	pc = PC_START + 1;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2 - 1);
+	ck_assert_uint_eq(getsp(), 0xfff9);
+	ck_assert_uint_eq(memory[0xfffc], (PC_START + 2) & 0xff);
+	ck_assert_uint_eq(memory[0xfffb], ((PC_START + 2) >> 8) & 0xff);
+	ck_assert_uint_eq(memory[0xfffa], (PC_START + 2) >> 16);
+}
+END_TEST
+
+START_TEST(test_rjmp)
+{
+	uint16_t code[] = {
+		0xc000 | /*k*/ 0x7ff,	/* rjmp PC + 1 + $7ff */
+		0xc000 | /*k*/ 0xfff,	/* rjmp PC + 1 + $-1 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+	setsp(0xffff);
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1 + 0x7ff);
+	ck_assert_uint_eq(getsp(), 0xffff);
+
+	pc = PC_START + 1;
+
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2 - 1);
+	ck_assert_uint_eq(getsp(), 0xffff);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -1770,6 +1846,7 @@ suite_instr(void)
 	tcase_add_test(t, test_eicall22);
 	tcase_add_test(t, test_eijump22);
 	tcase_add_test(t, test_jmp22);
+	tcase_add_test(t, test_rcall22);
 	suite_add_tcase(s, t);
 
 	t = tcase_create("256 byte RAM");
@@ -1818,6 +1895,8 @@ suite_instr(void)
 	tcase_add_test(t, test_cpse);
 	tcase_add_test(t, test_icall);
 	tcase_add_test(t, test_ijump);
+	tcase_add_test(t, test_rcall);
+	tcase_add_test(t, test_rjmp);
 	suite_add_tcase(s, t);
 
 	return s;

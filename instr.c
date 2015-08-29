@@ -867,6 +867,30 @@ instr_push(struct instr_decode_common *idc)
 }
 
 void
+instr_rcalljmp(struct instr_decode_common *idc)
+{
+	uint32_t pc2;
+	int16_t k;
+	bool call;
+
+	call = bits(idc->instr, 12, 12);
+	k = bits(idc->instr, 11, 0);
+	if ((k & 0x800) != 0)
+		k |= 0xf000;
+
+	if (call) {
+		pc2 = pc_start + 1;
+		pushbyte(pc2 & 0xff);
+		pushbyte((pc2 >> 8) & 0xff);
+		if (pc22)
+			pushbyte(pc2 >> 16);
+	}
+
+	pc = pc + k;
+	/* Implicit +1 from instr_size. */
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 
