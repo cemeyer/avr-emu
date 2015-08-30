@@ -80,6 +80,7 @@ void instr_sts(struct instr_decode_common *);
 void instr_stx(struct instr_decode_common *);
 void instr_styz(struct instr_decode_common *);
 void instr_swap(struct instr_decode_common *);
+void instr_xch(struct instr_decode_common *);
 void instr_xor(struct instr_decode_common *);
 
 void instr_unimp(struct instr_decode_common *);

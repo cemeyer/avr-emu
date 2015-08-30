@@ -1084,6 +1084,35 @@ instr_swap(struct instr_decode_common *idc)
 }
 
 void
+instr_xch(struct instr_decode_common *idc)
+{
+	uint32_t addr;
+	uint8_t rd, mode, res;
+
+	mode = bits(idc->instr, 1, 0);
+
+	rd = memory[idc->ddddd];
+	addr = memword(REGP_Z);
+
+	switch (mode) {
+	case 0:
+		res = __atomic_exchange_n(&memory[addr], rd, __ATOMIC_SEQ_CST);
+		break;
+	case 1:
+		res = __atomic_fetch_or(&memory[addr], rd, __ATOMIC_SEQ_CST);
+		break;
+	case 2:
+		res = __atomic_fetch_and(&memory[addr], ~rd, __ATOMIC_SEQ_CST);
+		break;
+	case 3:
+		res = __atomic_fetch_xor(&memory[addr], rd, __ATOMIC_SEQ_CST);
+		break;
+	}
+
+	memory[idc->ddddd] = res;
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 

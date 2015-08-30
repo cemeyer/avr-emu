@@ -5,9 +5,9 @@ This is an AVR emulator. It is a work in progress, but it tries to faithfully
 emulate some basic AVR-like machines. Most instructions are implemented.
 
 Notably absent are `SPM` — store to program memory; the debugging or
-interrupt-reliant `SLEEP`, `WDR` and `BREAK`; and any of the advanced XMEGA
-instructions — `XCH`, `LAS`, `LAC`, `LAT`, and `DES`. No off-CPU hardware is
-supported at all yet — no external interrupts, no AES module, etc.
+interrupt-reliant `SLEEP`, `WDR` and `BREAK`; and the XMEGA instruction `DES`.
+No off-CPU hardware is supported at all yet — no external interrupts, no AES
+module, etc.
 
 avr-emu has 2 knobs at this time. One may select a 16-bit or 22-bit Program
 Counter, and one may limit the addressable memory to 64 kiB or 256 bytes. They

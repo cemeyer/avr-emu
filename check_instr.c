@@ -2431,6 +2431,56 @@ START_TEST(test_swap)
 }
 END_TEST
 
+/*
+ * XXX: May not be totally correct. I couldn't find an instruction manual that
+ * actually mentions these instructions yet.
+ *
+ * In particular, it isn't clear if XMEGA will use the RAMPZ extension to the Z
+ * register.
+ */
+START_TEST(test_xch)
+{
+	uint16_t code[] = {
+		0x9204 | 0x1d0,		/* xch r29 */
+		0x9205 | 0x1d0,		/* las r29 */
+		0x9206 | 0x1d0,		/* lac r29 */
+		0x9207 | 0x1d0,		/* lat r29 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memwriteword(REGP_Z, 0xabcd);
+	memory[0xabcd] = 0xfe;
+	memory[29] = 0x12;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[29], 0xfe);
+	ck_assert_uint_eq(memory[0xabcd], 0x12);
+
+	memory[0xabcd] = 0xa5;
+	memory[29] = 0x5a;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 2);
+	ck_assert_uint_eq(memory[29], 0xa5);
+	ck_assert_uint_eq(memory[0xabcd], 0xff);
+
+	memory[29] = 0xa5;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 3);
+	ck_assert_uint_eq(memory[29], 0xff);
+	ck_assert_uint_eq(memory[0xabcd], 0x5a);
+
+	memory[29] = 0xd2;
+	memory[0xabcd] = 0x3c;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 4);
+	ck_assert_uint_eq(memory[29], 0x3c);
+	ck_assert_uint_eq(memory[0xabcd], 0xee);
+
+	memory[0xabcd] = 0;
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -2474,6 +2524,7 @@ suite_instr(void)
 	tcase_add_test(t, test_sty);
 	tcase_add_test(t, test_sts);
 	tcase_add_test(t, test_swap);
+	tcase_add_test(t, test_xch);
 	tcase_add_test(t, test_xor);
 	suite_add_tcase(s, t);
 
