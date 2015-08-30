@@ -1034,6 +1034,32 @@ instr_stx(struct instr_decode_common *idc)
 }
 
 void
+instr_styz(struct instr_decode_common *idc)
+{
+	uint8_t displace, mode;
+	bool Y;
+
+	Y = bits(idc->instr, 3, 3);
+
+	if (bits(idc->instr, 12, 12) == 0) {
+		mode = 0;
+		displace = (bits(idc->instr, 13, 13) >> 8) |
+		    (bits(idc->instr, 11, 10) >> 7) |
+		    bits(idc->instr, 2, 0);
+	} else {
+		mode = bits(idc->instr, 1, 0);
+		displace = 0;
+	}
+
+	if (Y)
+		instr_ldst_common(REGP_Y, RAMPY, mode, displace, "Y", true,
+		    idc);
+	else
+		instr_ldst_common(REGP_Z, RAMPZ, mode, displace, "Z", true,
+		    idc);
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 
