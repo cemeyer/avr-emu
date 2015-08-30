@@ -76,6 +76,7 @@ void instr_ror(struct instr_decode_common *);
 void instr_sbics(struct instr_decode_common *);
 void instr_sbiw(struct instr_decode_common *);
 void instr_sbrcs(struct instr_decode_common *);
+void instr_stx(struct instr_decode_common *);
 void instr_xor(struct instr_decode_common *);
 
 void instr_unimp(struct instr_decode_common *);
