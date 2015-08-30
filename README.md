@@ -60,8 +60,6 @@ On Fedora Linux, simply install `avr-gdb`.
 GDB: Debugging Emulated ROMs
 ============================
 
-TODO(avr).
-
 Invoke `avr-emu -g <romfile>` to wait for GDB on startup. The emulator binds
 TCP port 3713 and waits for the first client to connect. Use `avr-gdb` from
 another terminal to connect with:
@@ -70,9 +68,9 @@ another terminal to connect with:
 
 Supported commands are:
 * reading/writing registers
-* reading/writing memory
+* reading/writing memory (WIP)
 * (instruction) stepping, reverse-stepping
-* breakpoints, continue
+* breakpoints, continue (WIP)
 
 TODO:
 * Memory watchpoints

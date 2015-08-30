@@ -350,12 +350,10 @@ gdbstub_intr(void)
 	if (stepone) {
 		interact = true;
 		stepone = false;
-#if 0
-	} else if (g_hash_table_contains(breakpoints, ptr(registers[PC]))) {
-		printf("Breakpoint @%04x\n", (uns)registers[PC]);
+	} else if (g_hash_table_contains(breakpoints, ptr(pc))) {
+		printf("Breakpoint @%06x\n", (uns)pc);
 		interact = true;
 		gdbstub_breakpoint();
-#endif
 	}
 
 	// XXX IF we broke, or single-stepped after previous request, then we
@@ -389,54 +387,92 @@ gdbstub_stopped(void)
 // char* cmd, void* extra
 CMD_HANDLER(getregs)
 {
+	char buf[32 * 2 + 2 + 4 + 8 + 1];
+	size_t off;
+	unsigned i;
+	int rc;
 
 	(void)cmd;
 	(void)extra;
-#if 0
-	char buf[16*4+1];
-	int rc;
 
-	for (unsigned i = 0; i < 16; i++) {
-		rc = sprintf(&buf[i*4], "%02x%02x", registers[i] & 0xff,
-		    registers[i] >> 8);
-		ASSERT(rc == 4, "x");
+	for (i = 0, off = 0; i < 32; i++) {
+		rc = sprintf(&buf[off], "%02x", (uns)memory[i]);
+		ASSERT(rc == 2, "x");
+		off += rc;
+		ASSERT(off < sizeof(buf), "x");
 	}
 
+	rc = sprintf(&buf[off], "%02x", (uns)memory[SREG]);
+	ASSERT(rc == 2, "x");
+	off += rc;
+	ASSERT(off < sizeof(buf), "x");
+
+	rc = sprintf(&buf[off], "%02x%02x", (uns)memory[SP_LO],
+	    (uns)memory[SP_HI]);
+	ASSERT(rc == 4, "x");
+	off += rc;
+	ASSERT(off < sizeof(buf), "x");
+
+	/* GDB expects byte-addressed fake PC. */
+	rc = sprintf(&buf[off], "%02x%02x%02x00", ((uns)pc << 1) & 0xff,
+	    ((uns)pc >> 7) & 0xff, ((uns)pc >> 15) & 0x7f);
+	ASSERT(rc == 8, "x");
+	off += rc;
+	ASSERT(off < sizeof(buf), "x");
+
 	gdb_sendstr(buf);
-#endif
 }
 
 CMD_HANDLER(setregs)
 {
-
-	(void)cmd;
-	(void)extra;
-#if 0
-	unsigned reglo, reghi, i;
+	unsigned reglo, reghi, reg3, reg4, i;
 	int rc;
 
 	(void)extra;
 
 	cmd++;
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < 32; i++) {
 		ASSERT(*cmd, "x");
 
-		rc = sscanf(cmd, "%02x%02x", &reglo, &reghi);
-		ASSERT(rc == 2, "x");
+		rc = sscanf(cmd, "%02x", &reglo);
+		ASSERT(rc == 1, "x");
 
-		registers[i] = reglo | (reghi << 8);
-		cmd += 4;
+		memory[i] = reglo;
+		cmd += 2;
 	}
 
+	ASSERT(*cmd, "x");
+	rc = sscanf(cmd, "%02x", &reglo);
+	ASSERT(rc == 1, "x");
+	memory[SREG] = reglo;
+	cmd += 2;
+
+	ASSERT(*cmd, "x");
+	rc = sscanf(cmd, "%02x%02x", &reglo, &reghi);
+	ASSERT(rc == 2, "x");
+	memory[SP_LO] = reglo;
+	memory[SP_HI] = reghi;
+	cmd += 4;
+
+	ASSERT(*cmd, "x");
+	rc = sscanf(cmd, "%02x%02x%02x%02x", &reglo, &reghi, &reg3, &reg4);
+	ASSERT(rc == 4, "x");
+	pc = ((reglo |
+	    (reghi << 8) | ((uint32_t)reg3 << 16) | ((uint32_t)reg4 << 24)) >> 1);
+	ASSERT((pc & 0xffc00000) == 0, "PC is only 22 bits");
+	if (!pc22)
+		ASSERT((pc & 0xffff0000) == 0, "PC is only 16 bits");
+	cmd += 8;
+
 	gdb_sendstr("OK");
-#endif
 }
 
 // Read/write memory as a stream of bytes
 CMD_HANDLER(readmem)
 {
-	unsigned start, rlen, slen, i;
+	unsigned start, rlen, slen, i, val;
 	char buffer[4096+1] = { 0 };
+	uint16_t flashwd;
 	int rc;
 
 	(void)extra;
@@ -445,10 +481,24 @@ CMD_HANDLER(readmem)
 	rc = sscanf(cmd, "%x,%x", &start, &rlen);
 	ASSERT(rc == 2, "x");
 
-	ASSERT(rlen*2 < sizeof buffer, "buffer overrun");
+#if 0
+	/*
+	 * AVR-GDB uses some high order bits to distinguish program and data
+	 * regions. Not sure exactly.
+	 */
+	printf("XXX%s: Got read request 0x%08x x %u\n", __func__, start, rlen);
+#endif
+
+	ASSERT(rlen * 2 < sizeof buffer, "buffer overrun");
 	slen = 0;
 	for (i = 0; i < rlen; i++) {
-		rc = sprintf(&buffer[slen], "%02x", membyte(start + i));
+		flashwd = flash[(start + i) / 2];
+		if ((start + i) % 2 == 0)
+			val = (flashwd & 0xff);
+		else
+			val = (flashwd >> 8);
+
+		rc = sprintf(&buffer[slen], "%02x", val);
 
 		ASSERT(rc == 2, "x");
 		slen += (unsigned)rc;
