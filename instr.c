@@ -1027,6 +1027,21 @@ instr_sbrcs(struct instr_decode_common *idc)
 }
 
 void
+instr_sts(struct instr_decode_common *idc)
+{
+	uint32_t addr;
+
+	addr = idc->imm_u16;
+
+	if (!pc_mem_max_64k)
+		addr |= ((uint32_t)memory[RAMPD] << 16);
+	else if (pc_mem_max_256b)
+		addr &= 0xff;
+
+	memory[addr] = memory[idc->ddddd];
+}
+
+void
 instr_stx(struct instr_decode_common *idc)
 {
 
