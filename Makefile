@@ -1,7 +1,8 @@
 PROG=		avr-emu
 SRCS=		main.c gdbstub.c instr.c
 HDRS=		emu.h
-CHECK_SRCS=	check_instr.c
+CHECK_SRCS=	check_emu.c check_instr.c test_main.c
+CHECK_HDRS=	test.h
 
 WARNFLAGS=	-Wall -Wextra -std=gnu11 -Wno-unused-function -Wno-unused-variable -Wno-missing-field-initializers
 OTHERFLAGS=	-fexceptions -Wp,-D_FORTIFY_SOURCE=2
@@ -27,12 +28,12 @@ LDLIBS=		$(GLIB_LDFLAGS) $(LDFLAGS)
 $(PROG): $(SRCS) $(HDRS)
 	$(CC) $(FLAGS) $(SRCS) -o $@ $(LDLIBS)
 
-checkrun: check_instr
-	./check_instr
+checkrun: checktests
+	./checktests
 
-checkall: check_instr
-check_instr: $(CHECK_SRCS) $(SRCS) $(HDRS)
+checkall: checktests $(PROG)
+checktests: $(CHECK_SRCS) $(SRCS) $(CHECK_HDRS) $(HDRS)
 	$(CC) $(FLAGS) -DEMU_CHECK $(CHECK_SRCS) $(SRCS) -o $@ -lcheck $(LDLIBS)
 
 clean:
-	rm -f check_instr avr-emu
+	rm -f checktests avr-emu

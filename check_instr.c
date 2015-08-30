@@ -1,20 +1,21 @@
-#include "emu.h"
-
 #include <check.h>
+
+#include "emu.h"
+#include "test.h"
 
 #define	PC_START		0
 
 /* Make it harder to forget to add tests to suite. */
 #pragma GCC diagnostic error "-Wunused-function"
 
-void
+static void
 install_words(uint16_t *code, uint32_t addr, size_t sz)
 {
 
 	memcpy(&flash[addr], code, sz);
 }
 
-void
+static void
 setup_machine(void)
 {
 
@@ -22,7 +23,7 @@ setup_machine(void)
 	init();
 }
 
-void
+static void
 setup_machine22(void)
 {
 
@@ -31,7 +32,7 @@ setup_machine22(void)
 	pc22 = true;
 }
 
-void
+static void
 setup_machine64(void)
 {
 
@@ -40,7 +41,7 @@ setup_machine64(void)
 	pc_mem_max_64k = true;
 }
 
-void
+static void
 setup_machine256(void)
 {
 
@@ -50,7 +51,7 @@ setup_machine256(void)
 	pc_mem_max_256b = true;
 }
 
-void
+static void
 teardown_machine(void)
 {
 
@@ -2557,15 +2558,5 @@ suite_instr(void)
 	tcase_add_test(t, test_sbrs);
 	suite_add_tcase(s, t);
 
-	return s;
-}
-
-int
-main(void)
-{
-	Suite *s = suite_instr();
-	SRunner *sr = srunner_create(s);
-
-	srunner_run_all(sr, CK_NORMAL);
-	return srunner_ntests_failed(sr);
+	return (s);
 }

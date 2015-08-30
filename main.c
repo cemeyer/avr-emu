@@ -31,7 +31,7 @@ uint64_t	 insnlimit;
 uint64_t	 insnreplaylim;
 bool		 off;
 bool		 replay_mode;
-bool		 ctrlc;
+volatile bool	 ctrlc;
 
 bool		 tracehex;
 FILE		*tracefile;
@@ -161,6 +161,7 @@ usage(void)
 		"\n"
 		"  FLAGS:\n"
 		"    -g            Debug with GDB\n"
+		"    -l=<N>        Limit execution to N instructions\n"
 		"    -t=TRACEFILE  Emit instruction trace\n"
 		"    -x            Trace output in hex\n");
 	exit(1);
@@ -178,10 +179,13 @@ main(int argc, char **argv)
 	if (argc < 2)
 		usage();
 
-	while ((opt = getopt(argc, argv, "gt:x")) != -1) {
+	while ((opt = getopt(argc, argv, "gl:t:x")) != -1) {
 		switch (opt) {
 		case 'g':
 			waitgdb = true;
+			break;
+		case 'l':
+			insnlimit = atoll(optarg);
 			break;
 		case 't':
 			tracefile = fopen(optarg, "wb");

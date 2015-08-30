@@ -1,10 +1,7 @@
 .*.swp
-*.bin
-avr-emu
-check_instr
+/avr-emu
+/checktests
 *.gcda
-bfhw
-bfnovo
+/testoutput/
 trace*.asm
 trace*.txt
-XXXhw

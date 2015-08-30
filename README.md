@@ -105,3 +105,6 @@ patches are welcome.
 Most of the emulator lives in `main.c`; instruction implementations are in
 `instr.c`. Most of the GDB remote stub lives in `gdbstub.c`. There are
 instruction emulation unit tests in `check_instr.c`.
+
+If you submit a patch, please add new check tests to an appropriate `check_*.c`
+file and ensure existing tests pass (`make checkrun`).
