@@ -1075,6 +1075,15 @@ instr_styz(struct instr_decode_common *idc)
 }
 
 void
+instr_swap(struct instr_decode_common *idc)
+{
+	uint8_t rd;
+
+	rd = memory[idc->ddddd];
+	memory[idc->ddddd] = (rd >> 4) | (rd << 4);
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 

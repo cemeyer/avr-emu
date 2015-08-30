@@ -2415,6 +2415,21 @@ START_TEST(test_sts256)
 }
 END_TEST
 
+START_TEST(test_swap)
+{
+	uint16_t code[] = {
+		0x9402 | 0x1f0,		/* swap r31 */
+	};
+
+	install_words(code, PC_START, sizeof(code));
+
+	memory[31] = 0xa5;
+	emulate1();
+	ck_assert_uint_eq(pc, PC_START + 1);
+	ck_assert_uint_eq(memory[31], 0x5a);
+}
+END_TEST
+
 Suite *
 suite_instr(void)
 {
@@ -2457,6 +2472,7 @@ suite_instr(void)
 	tcase_add_test(t, test_stx);
 	tcase_add_test(t, test_sty);
 	tcase_add_test(t, test_sts);
+	tcase_add_test(t, test_swap);
 	tcase_add_test(t, test_xor);
 	suite_add_tcase(s, t);
 
