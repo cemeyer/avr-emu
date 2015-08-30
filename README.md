@@ -1,8 +1,18 @@
 avr-emu
 =======
 
-This is an AVR emulator. It is a work in progress, and is not expected to be
-very good.
+This is an AVR emulator. It is a work in progress, but it tries to faithfully
+emulate some basic AVR-like machines. Most instructions are implemented.
+
+Notably absent are `SPM` — store to program memory; the debugging or
+interrupt-reliant `SLEEP`, `WDR` and `BREAK`; and any of the advanced XMEGA
+instructions — `XCH`, `LAS`, `LAC`, `LAT`, and `DES`. No off-CPU hardware is
+supported at all yet — no external interrupts, no AES module, etc.
+
+avr-emu has 2 knobs at this time. One may select a 16-bit or 22-bit Program
+Counter, and one may limit the addressable memory to 64 kiB or 256 bytes. They
+are not exposed in any meaningful way to users at this time; just the C
+variables `pc22`, `pc_mem_max_64k`, and `pc_mem_max_256b`.
 
 Alternatives
 ============
@@ -49,6 +59,8 @@ On Fedora Linux, simply install `avr-gdb`.
 
 GDB: Debugging Emulated ROMs
 ============================
+
+TODO(avr).
 
 Invoke `avr-emu -g <romfile>` to wait for GDB on startup. The emulator binds
 TCP port 3713 and waits for the first client to connect. Use `avr-gdb` from
