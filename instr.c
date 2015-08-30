@@ -1006,6 +1006,21 @@ instr_sbiw(struct instr_decode_common *idc)
 }
 
 void
+instr_sbrcs(struct instr_decode_common *idc)
+{
+	uint8_t b;
+	bool ifset, bit;
+
+	ifset = (bits(idc->instr, 9, 9) != 0);
+
+	b = idc->rrrrr - 16;
+	bit = (memory[idc->ddddd] & (1 << b));
+
+	if (ifset == bit)
+		skip_next_instruction = true;
+}
+
+void
 instr_xor(struct instr_decode_common *idc)
 {
 

@@ -110,7 +110,7 @@ static struct instr_decode avr_instr[] = {
 	{ 0xf000, 0xf800, instr_brb, .rrr20 = true },
 	{ 0xf800, 0xfe08, instr_bld, .ddddd84 = true, .rrr20 = true },
 	{ 0xfa00, 0xfe08, instr_bst, .ddddd84 = true, .rrr20 = true },
-	{ 0xfc00, 0xfc08, instr_unimp/*SBRC/SBRS*/, .ddddd84 = true, .rrr20 = true },
+	{ 0xfc00, 0xfc08, instr_sbrcs, .ddddd84 = true, .rrr20 = true },
 };
 
 void
