@@ -55,7 +55,7 @@ GDB: Installing avr-gdb
 
 avr-gdb is `gdb` targetted at remote debugging AVR binaries.
 
-On Fedora Linux, simply install `avr-gdb`.
+On Fedora Linux or FreeBSD, simply install `avr-gdb`.
 
 GDB: Debugging Emulated ROMs
 ============================
@@ -105,4 +105,5 @@ Most of the emulator lives in `main.c`; instruction implementations are in
 instruction emulation unit tests in `check_instr.c`.
 
 If you submit a patch, please add new check tests to an appropriate `check_*.c`
-file and ensure existing tests pass (`make checkrun`).
+file and ensure existing tests pass (`make checkrun`). Building and running the
+check unit tests requires the `check` (Fedora) or `libcheck` (FreeBSD) package.
