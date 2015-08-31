@@ -1,3 +1,5 @@
+#include <openssl/des.h>
+
 #include "emu.h"
 #include "instr.h"
 
@@ -453,6 +455,29 @@ instr_dec(struct instr_decode_common *idc)
 		idc->clrflags &= ~(SREG_V | SREG_S);
 		idc->setflags |= (SREG_V | SREG_S);
 	}
+}
+
+void
+instr_des(struct instr_decode_common *idc)
+{
+	DES_cblock key, inp, out;
+	DES_key_schedule ks;
+
+	idc->ddddd -= 16;
+
+	if (idc->ddddd < 15)
+		return;
+
+	memcpy(&key, &memory[8], sizeof(key));
+	memcpy(&inp, memory, sizeof(inp));
+
+	DES_set_key_unchecked(&key, &ks);
+	if ((memory[SREG] & SREG_H) != 0)
+		DES_ecb_encrypt(&inp, &out, &ks, DES_DECRYPT);
+	else
+		DES_ecb_encrypt(&inp, &out, &ks, DES_ENCRYPT);
+
+	memcpy(memory, &out, sizeof(out));
 }
 
 void

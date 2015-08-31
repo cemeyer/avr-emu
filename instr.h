@@ -44,6 +44,7 @@ void instr_cpc(struct instr_decode_common *);
 void instr_cpi(struct instr_decode_common *);
 void instr_cpse(struct instr_decode_common *);
 void instr_dec(struct instr_decode_common *);
+void instr_des(struct instr_decode_common *);
 void instr_eicalljump(struct instr_decode_common *);
 void instr_elpm(struct instr_decode_common *);
 void instr_elpmz(struct instr_decode_common *);

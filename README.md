@@ -4,10 +4,9 @@ avr-emu
 This is an AVR emulator. It is a work in progress, but it tries to faithfully
 emulate some basic AVR-like machines. Most instructions are implemented.
 
-Notably absent are `SPM` — store to program memory; the debugging or
-interrupt-reliant `SLEEP`, `WDR` and `BREAK`; and the XMEGA instruction `DES`.
-No off-CPU hardware is supported at all yet — no external interrupts, no AES
-module, etc.
+Notably absent are `SPM` — store to program memory and the debugging or
+interrupt-reliant `SLEEP`, `WDR` and `BREAK`.  No off-CPU hardware is supported
+at all yet — no external interrupts, no AES module, etc.
 
 avr-emu has 2 knobs at this time. One may select a 16-bit or 22-bit Program
 Counter, and one may limit the addressable memory to 64 kiB or 256 bytes. They
@@ -32,7 +31,7 @@ Building
 You will need `glib` and its development files (specifically, package config
 `.pc` files) installed. On Fedora, you can install these with `yum install
 glib2 glib2-devel`. On Ubuntu, use `apt-get install libglib2.0-0
-libglib2.0-dev`.
+libglib2.0-dev`. You will also need OpenSSL for DES instruction support.
 
 `make` will build the emulator, `avr-emu`.
 
