@@ -402,7 +402,7 @@ emulate(void)
 	}
 }
 
-void
+void __dead2
 _unhandled(const char *f, unsigned l, uint16_t instr)
 {
 
@@ -415,7 +415,7 @@ _unhandled(const char *f, unsigned l, uint16_t instr)
 	abort_nodump();
 }
 
-void
+void __dead2
 _illins(const char *f, unsigned l, uint16_t instr)
 {
 
@@ -428,7 +428,7 @@ _illins(const char *f, unsigned l, uint16_t instr)
 	abort_nodump();
 }
 
-void
+void __dead2
 abort_nodump(void)
 {
 

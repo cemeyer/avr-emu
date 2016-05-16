@@ -19,6 +19,9 @@
 #ifndef	__unused
 #define	__unused	__attribute__((unused))
 #endif
+#ifndef	__dead2
+#define	__dead2		__attribute__((__noreturn__))
+#endif
 
 #define	ARRAYLEN(arr)	((sizeof(arr)) / sizeof((arr)[0]))
 
@@ -89,15 +92,15 @@ extern uint64_t		 insns;
 extern uint64_t		 insnreplaylim;
 extern uint64_t		 insnlimit;
 
-void		 abort_nodump(void);
+void		 abort_nodump(void) __dead2;
 void		 init(void);
 void		 destroy(void);
 void		 emulate(void);
 void		 emulate1(void);
 #define	unhandled(instr)	_unhandled(__FILE__, __LINE__, instr)
-void		 _unhandled(const char *f, unsigned l, uint16_t instr);
+void		 _unhandled(const char *f, unsigned l, uint16_t instr) __dead2;
 #define	illins(instr)		_illins(__FILE__, __LINE__, instr)
-void		 _illins(const char *f, unsigned l, uint16_t instr);
+void		 _illins(const char *f, unsigned l, uint16_t instr) __dead2;
 void		 print_regs(void);
 /* Microseconds: */
 uint64_t	 now(void);
